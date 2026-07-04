@@ -447,8 +447,15 @@ export default function ForeSecure() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <ForeSecureMark size={28} />
             <div>
-              <span className="sl-display" style={{ fontWeight: 700, fontSize: 19, letterSpacing: "-0.02em", display: "block" }}>ForeSecure</span>
-              <span className="sl-mono" style={{ fontSize: 9.5, color: COLORS.slateLight, letterSpacing: "0.12em" }}>MONITOR · ASSESS · PROTECT</span>
+              <div style={{ display: "inline-block" }}>
+                <span className="sl-display" style={{ fontWeight: 700, fontSize: 19, letterSpacing: "-0.02em", display: "block" }}>ForeSecure</span>
+                <img
+                  src="/images/brand/underline.jpg"
+                  alt=""
+                  style={{ display: "block", width: 130, height: 9, objectFit: "fill", borderRadius: 1, marginTop: 3 }}
+                />
+              </div>
+              <span className="sl-mono" style={{ fontSize: 9.5, color: COLORS.red, fontWeight: 700, letterSpacing: "0.12em", display: "block", marginTop: 3 }}>MONITOR · ASSESS · PROTECT</span>
             </div>
           </div>
           <nav className="sl-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 32 }}>
