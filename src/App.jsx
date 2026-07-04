@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Plane, CloudLightning, ShieldAlert, HeartPulse, ArrowRight,
   MapPin, Clock, CheckCircle2, Menu, X, Mail, Bell, Activity,
-  Globe2, Radio, Lock, Building2, Newspaper, ArrowUpRight
+  Globe2, Radio, Lock, Building2, Newspaper, ArrowUpRight,
+  MoreHorizontal, ChevronRight, ChevronDown
 } from "lucide-react";
 
 const FONT_IMPORT_URL =
@@ -144,12 +145,263 @@ function MapIllustration() {
   );
 }
 
+function NetworkBackground() {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let raf;
+    let width, height;
+    let nodes = [];
+
+    const palette = ["#B3212E", "#C99A1E", "#5C6470"];
+
+    function resize() {
+      width = canvas.offsetWidth;
+      height = canvas.offsetHeight;
+      canvas.width = width * devicePixelRatio;
+      canvas.height = height * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      const count = Math.max(24, Math.floor((width * height) / 26000));
+      nodes = Array.from({ length: count }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25,
+        r: Math.random() * 1.4 + 0.8,
+        color: palette[Math.floor(Math.random() * palette.length)],
+        pulse: Math.random() * Math.PI * 2,
+      }));
+    }
+
+    function tick() {
+      ctx.clearRect(0, 0, width, height);
+      for (const n of nodes) {
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > width) n.vx *= -1;
+        if (n.y < 0 || n.y > height) n.vy *= -1;
+        n.pulse += 0.02;
+      }
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const a = nodes[i], b = nodes[j];
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d < 130) {
+            ctx.strokeStyle = `rgba(120,130,145,${0.14 * (1 - d / 130)})`;
+            ctx.lineWidth = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+      for (const n of nodes) {
+        const glow = 0.5 + 0.5 * Math.sin(n.pulse);
+        ctx.beginPath();
+        ctx.fillStyle = n.color;
+        ctx.globalAlpha = 0.35 + glow * 0.35;
+        ctx.arc(n.x, n.y, n.r + glow * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      raf = requestAnimationFrame(tick);
+    }
+
+    resize();
+    tick();
+    const onResize = () => resize();
+    window.addEventListener("resize", onResize);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); };
+  }, []);
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
+      aria-hidden="true"
+    />
+  );
+}
+
+const heroSlides = [
+  { src: "/images/hero/slide-1.jpg", label: "MONITOR" },
+  { src: "/images/hero/slide-2.png", label: "ASSESS" },
+  { src: "/images/hero/slide-3.jpg", label: "RESPOND" },
+  { src: "/images/hero/slide-4.jpg", label: "PROTECT" },
+];
+
+function HeroSlideshow({ slides = heroSlides, intervalMs = 1000, onIndexChange }) {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (!slides.length) return;
+    const id = setInterval(() => {
+      setIndex((i) => {
+        const next = (i + 1) % slides.length;
+        if (onIndexChange) onIndexChange(next);
+        return next;
+      });
+    }, intervalMs);
+    return () => clearInterval(id);
+  }, [slides, intervalMs, onIndexChange]);
+
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }} aria-hidden="true">
+      {slides.map((slide, i) => (
+        <img
+          key={slide.src}
+          src={slide.src}
+          alt=""
+          style={{
+            position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+            opacity: i === index ? 1 : 0,
+            transform: i === index ? "scale(1.06)" : "scale(1)",
+            transition: "opacity 1.2s ease, transform 8s ease-out",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+const videoCaptions = [
+  { start: 0, end: 2.5, text: "Crisis Management" },
+  { start: 3, end: 6.5, text: "Weather Warnings" },
+  { start: 7, end: 11.5, text: "Civil Unrest" },
+];
+
+function HeroVideo({ src = "/videos/hero.mp4", captions = videoCaptions, onCaptionChange }) {
+  const videoRef = useRef(null);
+  const [captionIndex, setCaptionIndex] = useState(-1);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    video.playsInline = true;
+    const playPromise = video.play();
+    if (playPromise && playPromise.catch) {
+      playPromise.catch(() => {
+        // Autoplay was blocked — retry once on first user interaction anywhere on the page
+        const retry = () => {
+          video.play().catch(() => {});
+          window.removeEventListener("click", retry);
+        };
+        window.addEventListener("click", retry, { once: true });
+      });
+    }
+    const handleTimeUpdate = () => {
+      const t = video.currentTime;
+      const idx = captions.findIndex((c) => t >= c.start && t < c.end);
+      setCaptionIndex((prev) => {
+        if (prev !== idx) {
+          if (onCaptionChange) onCaptionChange(idx);
+          return idx;
+        }
+        return prev;
+      });
+    };
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    return () => video.removeEventListener("timeupdate", handleTimeUpdate);
+  }, [captions, onCaptionChange]);
+
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+      <video
+        ref={videoRef}
+        src={src}
+        muted
+        loop
+        playsInline
+        autoPlay
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+      />
+    </div>
+  );
+}
+
+function RotatingLabel({ words, index }) {
+  return (
+    <div style={{ position: "relative", minHeight: 90 }}>
+      {words.map((w, i) => (
+        <h1
+          key={w}
+          className="sl-display"
+          style={{
+            position: "absolute", left: 0, top: 0, margin: 0,
+            fontSize: "clamp(34px, 5.2vw, 64px)", fontWeight: 700, letterSpacing: "-0.02em",
+            color: "#fff", lineHeight: 1.05, textShadow: "0 2px 24px rgba(0,0,0,0.45)",
+            opacity: i === index ? 1 : 0,
+            transform: i === index ? "translateY(0)" : "translateY(10px)",
+            transition: "opacity 0.6s ease, transform 0.6s ease",
+          }}
+        >
+          {w}
+        </h1>
+      ))}
+    </div>
+  );
+}
+
+const dotMenuItems = [
+  { label: "Consulting", chevron: true },
+  { label: "Resourcing", chevron: false },
+  { label: "Insights", chevron: true },
+  { label: "Careers", chevron: false },
+  { label: "About us", chevron: true },
+  { label: "Get in Touch", chevron: false },
+];
+
+function FullScreenMenu({ open, onClose }) {
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, background: "#fff", zIndex: 100,
+        transform: open ? "translateY(0)" : "translateY(-100%)",
+        transition: "transform 0.4s ease",
+        display: "flex", flexDirection: "column",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 28px", borderBottom: `1px solid ${COLORS.line}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <ForeSecureMark size={24} />
+          <span className="sl-display" style={{ fontWeight: 700, fontSize: 17 }}>ForeSecure</span>
+        </div>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 6 }} aria-label="Close menu">
+          <X size={26} color={COLORS.black} />
+        </button>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        {dotMenuItems.map(({ label, chevron }) => (
+          <a
+            key={label}
+            href="#"
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "22px 28px", borderBottom: `1px solid ${COLORS.line}`,
+              textDecoration: "none", color: COLORS.black, fontSize: 22,
+            }}
+            className="sl-display"
+          >
+            {label}
+            {chevron && <ChevronRight size={22} color={COLORS.slateLight} />}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const NAV_LINKS = ["Platform", "Solutions", "Intelligence", "Resources"];
 
 export default function ForeSecure() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dotMenuOpen, setDotMenuOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [captionIndex, setCaptionIndex] = useState(-1);
 
   return (
     <div style={{ background: COLORS.bg, color: COLORS.black, fontFamily: "'Inter', sans-serif", minHeight: "100vh" }}>
@@ -205,15 +457,30 @@ export default function ForeSecure() {
           <div className="sl-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <a href="#" className="sl-nav-link">Sign in</a>
             <button className="sl-btn-primary">Request briefing <ArrowRight size={15} /></button>
+            <button
+              onClick={() => setDotMenuOpen(true)}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 6, display: "flex" }}
+              aria-label="More options"
+            >
+              <MoreHorizontal size={22} color={COLORS.black} />
+            </button>
           </div>
-          <button
-            className="sl-mobile-toggle"
-            style={{ display: "none", background: "none", border: "none", cursor: "pointer" }}
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          <div className="sl-mobile-toggle" style={{ display: "none", alignItems: "center", gap: 4 }}>
+            <button
+              onClick={() => setDotMenuOpen(true)}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 6, display: "flex" }}
+              aria-label="More options"
+            >
+              <MoreHorizontal size={22} color={COLORS.black} />
+            </button>
+            <button
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 6, display: "flex" }}
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
         </div>
         {menuOpen && (
           <div style={{ padding: "8px 24px 20px", display: "flex", flexDirection: "column", gap: 14, borderTop: `1px solid ${COLORS.line}` }}>
@@ -222,47 +489,24 @@ export default function ForeSecure() {
           </div>
         )}
       </header>
+      <FullScreenMenu open={dotMenuOpen} onClose={() => setDotMenuOpen(false)} />
 
-      {/* HERO */}
-      <section style={{ maxWidth: 1160, margin: "0 auto", padding: "72px 24px 0" }}>
-        <div className="sl-hero-split" style={{ display: "grid", gridTemplateColumns: "1.05fr 0.95fr", gap: 48, alignItems: "center" }}>
+      {/* HERO — full viewport: nav (above) + slideshow + single tagline. Rest of the page lives below, reached by scrolling. */}
+      <section style={{ position: "relative", background: COLORS.black, overflow: "hidden", height: "calc(100vh - 73px)", minHeight: 520, display: "flex", alignItems: "flex-end" }}>
+        <HeroVideo onCaptionChange={setCaptionIndex} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(20,23,28,0.15) 0%, rgba(20,23,28,0.75) 100%)" }} />
+        <div style={{ position: "relative", maxWidth: 1160, margin: "0 auto", padding: "0 24px 64px", width: "100%" }}>
           <Reveal>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 8, background: COLORS.black,
-              color: COLORS.gold, padding: "6px 12px", borderRadius: 3, fontSize: 12.5, fontWeight: 600, marginBottom: 22,
-              fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.04em",
-            }}>
-              <Activity size={13} /> OPERATIONAL STATUS: ACTIVE — 6,200+ SITES MONITORED
-            </div>
-            <h1 className="sl-display" style={{ fontSize: "clamp(32px, 4.2vw, 50px)", lineHeight: 1.08, fontWeight: 700, letterSpacing: "-0.02em", margin: 0 }}>
-              See the threat first. Move your people before it arrives.
-            </h1>
-            <p style={{ fontSize: 17.5, color: COLORS.slate, marginTop: 20, lineHeight: 1.6, maxWidth: 480 }}>
-              ForeSecure fuses global monitoring, verified analysis, and rapid alerting into a single operational picture — built for organizations that cannot afford to learn about a threat from the news.
-            </p>
-            <div style={{ display: "flex", gap: 12, marginTop: 30, flexWrap: "wrap" }}>
-              <button className="sl-btn-primary">Request a briefing <ArrowRight size={15} /></button>
-              <button className="sl-btn-ghost">View operations platform</button>
-            </div>
-            <div style={{ display: "flex", gap: 28, marginTop: 40, flexWrap: "wrap" }}>
-              {[["48 SEC", "avg. dispatch time"], ["24/7", "watch desk"], ["190+", "territories covered"]].map(([n, l]) => (
-                <div key={l}>
-                  <div className="sl-display" style={{ fontSize: 24, fontWeight: 700 }}>{n}</div>
-                  <div style={{ fontSize: 13, color: COLORS.slateLight }}>{l}</div>
-                </div>
-              ))}
-            </div>
+            <RotatingLabel words={videoCaptions.map((c) => c.text)} index={captionIndex} />
           </Reveal>
-          <Reveal delay={120}>
-            <div style={{ borderRadius: 12, overflow: "hidden", boxShadow: "0 20px 50px -20px rgba(20,23,28,0.35)" }}>
-              <MapIllustration />
-            </div>
-          </Reveal>
+        </div>
+        <div style={{ position: "absolute", bottom: 18, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,0.6)" }}>
+          <ChevronDown size={22} />
         </div>
       </section>
 
       {/* TICKER — signature element */}
-      <section style={{ marginTop: 56, background: COLORS.black, padding: "16px 0", overflow: "hidden" }}>
+      <section style={{ background: COLORS.black, padding: "16px 0", overflow: "hidden", borderTop: "1px solid #24272E" }}>
         <div className="sl-ticker-track">
           {[...tickerFeed, ...tickerFeed].map((item, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 28px", borderRight: "1px solid #2A2E36", whiteSpace: "nowrap" }}>
