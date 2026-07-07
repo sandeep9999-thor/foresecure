@@ -3,7 +3,7 @@ import {
   Plane, CloudLightning, ShieldAlert, HeartPulse, ArrowRight,
   MapPin, Clock, CheckCircle2, Menu, X, Mail, Bell, Activity,
   Globe2, Radio, Lock, Building2, Newspaper, ArrowUpRight,
-  MoreHorizontal, ChevronRight, ChevronDown, RefreshCw
+  MoreHorizontal, ChevronRight, ChevronDown, RefreshCw, MapPinned, ExternalLink
 } from "lucide-react";
 
 const FONT_IMPORT_URL =
@@ -400,6 +400,71 @@ function FullScreenMenu({ open, onClose }) {
   );
 }
 
+function LocationModal({ data, onClose }) {
+  if (!data) return null;
+  const { title, url, source, location } = data;
+  const mapSrc = location
+    ? `https://www.google.com/maps?q=${location.lat},${location.lng}&z=9&output=embed`
+    : null;
+  const mapsLink = location
+    ? `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`
+    : null;
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, background: "rgba(20,23,28,0.72)", zIndex: 200,
+        display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ background: "#fff", borderRadius: 14, maxWidth: 560, width: "100%", overflow: "hidden", boxShadow: "0 30px 80px -20px rgba(0,0,0,0.5)" }}
+      >
+        <div style={{ padding: "18px 22px", borderBottom: `1px solid ${COLORS.line}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <h3 className="sl-display" style={{ fontSize: 16.5, fontWeight: 600, lineHeight: 1.4, margin: 0 }}>{title}</h3>
+            {source && <div style={{ fontSize: 12.5, color: COLORS.slateLight, marginTop: 6 }}>{source}</div>}
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, flexShrink: 0 }} aria-label="Close">
+            <X size={20} color={COLORS.slateLight} />
+          </button>
+        </div>
+
+        {mapSrc ? (
+          <iframe
+            title="Article location"
+            src={mapSrc}
+            width="100%"
+            height="280"
+            style={{ border: 0, display: "block" }}
+            loading="lazy"
+          />
+        ) : (
+          <div style={{ padding: "40px 22px", textAlign: "center", color: COLORS.slateLight, fontSize: 13.5 }}>
+            <MapPinned size={28} color={COLORS.slateLight} style={{ marginBottom: 10 }} />
+            <div>No precise location could be identified for this article.</div>
+          </div>
+        )}
+
+        <div style={{ padding: "16px 22px", display: "flex", gap: 12, flexWrap: "wrap" }}>
+          {mapsLink && (
+            <a href={mapsLink} target="_blank" rel="noreferrer" className="sl-btn-ghost" style={{ fontSize: 13.5 }}>
+              <MapPinned size={15} /> Open in Google Maps
+            </a>
+          )}
+          {url && (
+            <a href={url} target="_blank" rel="noreferrer" className="sl-btn-primary" style={{ fontSize: 13.5 }}>
+              Read full article <ExternalLink size={14} />
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const NAV_LINKS = ["Platform", "Solutions", "Intelligence", "Resources"];
 
 export default function ForeSecure() {
@@ -414,6 +479,7 @@ export default function ForeSecure() {
   const [newsError, setNewsError] = useState(null);
   const [newsLoading, setNewsLoading] = useState(false);
   const [newsUpdatedAt, setNewsUpdatedAt] = useState(null);
+  const [locationModal, setLocationModal] = useState(null);
 
   function loadNews() {
     setNewsLoading(true);
@@ -462,14 +528,18 @@ export default function ForeSecure() {
 
   // Feed the scrolling ticker from live /api/news results once they've loaded;
   // fall back to the placeholder feed while loading or if the request failed.
-  const tickerData =
+  // Capped to a fixed count and given a duration proportional to that count so
+  // the scroll speed stays readable regardless of how many live items come back.
+  const tickerSource =
     liveArticles && liveArticles.length > 0
-      ? liveArticles.map((a) => ({
+      ? liveArticles.slice(0, 10).map((a) => ({
           level: tagToLevel(a.tag),
-          loc: a.source,
+          loc: a.location ? a.location.name : a.source,
           type: a.title,
           timeLabel: a.publishedAt ? timeAgo(a.publishedAt) : "",
           url: a.url,
+          location: a.location,
+          source: a.source,
         }))
       : tickerFeed.map((item) => ({
           level: item.level,
@@ -477,7 +547,11 @@ export default function ForeSecure() {
           type: item.type,
           timeLabel: `${item.t} ago`,
           url: null,
+          location: null,
+          source: null,
         }));
+  const tickerData = tickerSource;
+  const tickerDuration = Math.max(28, tickerData.length * 6);
 
   return (
     <div style={{ background: COLORS.bg, color: COLORS.black, fontFamily: "'Inter', sans-serif", minHeight: "100vh" }}>
@@ -498,7 +572,8 @@ export default function ForeSecure() {
         }
         .sl-btn-ghost:hover { border-color: ${COLORS.gold}; background: ${COLORS.goldLight}; }
         .sl-card { background: #fff; border: 1px solid ${COLORS.line}; border-radius: 10px; }
-        .sl-ticker-track { display: flex; width: max-content; animation: sl-scroll 32s linear infinite; }
+        .sl-ticker-track { display: flex; width: max-content; animation: sl-scroll linear infinite; }
+        .sl-ticker-track:hover { animation-play-state: paused; }
         @keyframes sl-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         @keyframes sl-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .sl-nav-link { color: ${COLORS.slate}; text-decoration: none; font-size: 14.5px; font-weight: 500; }
@@ -591,17 +666,25 @@ export default function ForeSecure() {
 
       {/* TICKER — signature element, driven by live /api/news when available */}
       <section style={{ background: COLORS.black, padding: "16px 0", overflow: "hidden", borderTop: "1px solid #24272E" }}>
-        <div className="sl-ticker-track">
+        <div className="sl-ticker-track" style={{ animationDuration: `${tickerDuration}s` }}>
           {[...tickerData, ...tickerData].map((item, i) => {
-            const Tag = item.url ? "a" : "div";
+            const clickable = Boolean(item.url);
             return (
-              <Tag
+              <button
                 key={i}
-                {...(item.url ? { href: item.url, target: "_blank", rel: "noreferrer" } : {})}
+                onClick={() => clickable && setLocationModal({
+                  title: item.type,
+                  url: item.url,
+                  source: item.source,
+                  location: item.location,
+                  publishedAt: null,
+                })}
                 style={{
                   display: "flex", alignItems: "center", gap: 10, padding: "0 28px",
                   borderRight: "1px solid #2A2E36", whiteSpace: "nowrap",
-                  textDecoration: "none", cursor: item.url ? "pointer" : "default",
+                  textDecoration: "none", cursor: clickable ? "pointer" : "default",
+                  background: "none", border: "none", borderRightWidth: 1, borderRightColor: "#2A2E36", borderRightStyle: "solid",
+                  font: "inherit", textAlign: "left",
                 }}
               >
                 <span className="sl-mono" style={{ fontSize: 11, fontWeight: 600, color: item.level === "WARNING" ? "#F0A8A8" : item.level === "WATCH" ? "#EBCE8A" : "#B9BCC2", background: "rgba(255,255,255,0.06)", padding: "3px 8px", borderRadius: 3 }}>
@@ -611,11 +694,12 @@ export default function ForeSecure() {
                 <span className="sl-mono" style={{ fontSize: 13, color: "#DAD8D0" }}>{item.loc}</span>
                 <span style={{ fontSize: 13, color: "#9A9DA3", maxWidth: 420, overflow: "hidden", textOverflow: "ellipsis" }}>{item.type}</span>
                 <span className="sl-mono" style={{ fontSize: 11.5, color: "#63666D" }}>{item.timeLabel}</span>
-              </Tag>
+              </button>
             );
           })}
         </div>
       </section>
+      <LocationModal data={locationModal} onClose={() => setLocationModal(null)} />
 
       {/* TRUSTED-BY STATS BAR */}
       <section style={{ maxWidth: 1160, margin: "0 auto", padding: "56px 24px 0" }}>
@@ -660,12 +744,10 @@ export default function ForeSecure() {
                   <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 4, maxHeight: 340, overflowY: "auto", paddingRight: 4 }}>
                     {items.length > 0 ? (
                       items.map((item) => (
-                        <a
+                        <button
                           key={item.url}
-                          href={item.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ display: "block", padding: "10px 0", borderBottom: `1px solid ${COLORS.line}`, textDecoration: "none", color: "inherit" }}
+                          onClick={() => setLocationModal({ title: item.title, url: item.url, source: item.source, location: item.location })}
+                          style={{ display: "block", width: "100%", padding: "10px 0", borderBottom: `1px solid ${COLORS.line}`, textDecoration: "none", color: "inherit", background: "none", border: "none", borderBottomWidth: 1, borderBottomColor: COLORS.line, borderBottomStyle: "solid", textAlign: "left", cursor: "pointer", font: "inherit" }}
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <span className="sl-mono" style={{ fontSize: 10, color: COLORS.red, background: COLORS.goldLight, padding: "2px 7px", borderRadius: 3, fontWeight: 600 }}>{item.tag}</span>
@@ -674,8 +756,11 @@ export default function ForeSecure() {
                             </span>
                           </div>
                           <div style={{ fontSize: 13.5, fontWeight: 500, marginTop: 6, lineHeight: 1.4 }}>{item.title}</div>
-                          <div style={{ fontSize: 11.5, color: COLORS.slateLight, marginTop: 4 }}>{item.source}</div>
-                        </a>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: COLORS.slateLight, marginTop: 4 }}>
+                            {item.location && <MapPin size={11} />}
+                            {item.location ? item.location.name : item.source}
+                          </div>
+                        </button>
                       ))
                     ) : (
                       <div style={{ fontSize: 13, color: COLORS.slateLight, padding: "16px 0" }}>
@@ -864,7 +949,11 @@ export default function ForeSecure() {
         <div className="sl-grid-4" style={{ marginTop: 32, gridTemplateColumns: "repeat(3, 1fr)" }}>
           {(liveArticles && liveArticles.length > 0 ? liveArticles.slice(0, 9) : insightsArticles).map((item, i) => (
             <Reveal key={item.url || item.title} delay={i * 90}>
-              <a href={item.url || "#"} target={item.url ? "_blank" : undefined} rel="noreferrer" className="sl-card" style={{ display: "block", padding: 22, height: "100%", textDecoration: "none", color: "inherit" }}>
+              <button
+                onClick={() => item.url && setLocationModal({ title: item.title, url: item.url, source: item.source, location: item.location || null })}
+                className="sl-card"
+                style={{ display: "block", width: "100%", padding: 22, height: "100%", textDecoration: "none", color: "inherit", background: "#fff", textAlign: "left", cursor: item.url ? "pointer" : "default", font: "inherit" }}
+              >
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span className="sl-mono" style={{ fontSize: 11, color: COLORS.red, background: COLORS.goldLight, padding: "3px 9px", borderRadius: 3, fontWeight: 600 }}>{item.tag}</span>
                   <span className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight }}>
@@ -873,9 +962,10 @@ export default function ForeSecure() {
                 </div>
                 <h3 className="sl-display" style={{ fontSize: 16.5, fontWeight: 600, marginTop: 14, lineHeight: 1.4 }}>{item.title}</h3>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 12.5, color: COLORS.slateLight }}>
-                  <Newspaper size={14} />{item.source || item.read}
+                  {item.location ? <MapPin size={14} /> : <Newspaper size={14} />}
+                  {item.location ? item.location.name : (item.source || item.read)}
                 </div>
-              </a>
+              </button>
             </Reveal>
           ))}
         </div>
