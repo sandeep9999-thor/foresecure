@@ -502,10 +502,12 @@ export default function ForeSecure() {
   }
 
   // Load once on mount, then keep the feed genuinely "live" by refreshing
-  // in the background every 3 minutes without any user action required.
+  // in the background every 90 seconds without any user action required —
+  // matched to the API's cache window so we're not polling faster than
+  // the data actually changes.
   useEffect(() => {
     loadNews();
-    const id = setInterval(loadNews, 3 * 60 * 1000);
+    const id = setInterval(loadNews, 90 * 1000);
     return () => clearInterval(id);
   }, []);
 
