@@ -27,10 +27,10 @@ function categorize(text = "") {
 // sports, entertainment, etc. are excluded entirely rather than shown at
 // low priority.
 const HIGH_RISK_TERMS =
-  /earthquake|tsunami|explosion|bomb(ing)?|terroris(t|m)|mass shooting|missile|air ?strike|invasion|coup|state of emergency|evacuat|wildfire|hurricane|cyclone|typhoon|flood(ing)?|death toll|killed|dead|martial law|riot|militant|gunman|hostage|landslide|volcano|collapse/i;
+  /earthquake|tsunami|explosion|bomb(ing)?|terroris(t|m)|mass shooting|missile|air ?strike|invasion|coup|state of emergency|evacuat|wildfire|hurricane|cyclone|typhoon|flood(ing)?|death toll|killed|dead|wounded|injured|martial law|riot|militant|gunman|gunfire|hostage|landslide|volcano|collapse|derail|plane crash|crash kills|deadly/i;
 
 const MEDIUM_RISK_TERMS =
-  /protest|strike|warning|advisory|storm|security threat|clash(es)?|unrest|outbreak|tension|sanction|arrest|threat|warns?|shutdown|blockade|standoff/i;
+  /protest|strike|warning|advisory|storm|security threat|clash(es)?|unrest|outbreak|tension|sanction|arrest|threat|warns?|shutdown|blockade|standoff|deploy(s|ed)? troops|military|emergency|breaking|urgent/i;
 
 function classifyRisk(title) {
   if (HIGH_RISK_TERMS.test(title)) return "HIGH";
@@ -171,6 +171,7 @@ const DIRECT_REGION_FEEDS = {
   APAC: [
     "https://feeds.bbci.co.uk/news/world/asia/rss.xml",
     "https://www.theguardian.com/world/asia/rss",
+    "https://www.channelnewsasia.com/rssfeeds/8395986",
   ],
   EMEA: [
     "https://feeds.bbci.co.uk/news/world/europe/rss.xml",
@@ -178,6 +179,7 @@ const DIRECT_REGION_FEEDS = {
     "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml",
     "https://www.theguardian.com/world/middleeast/rss",
     "https://www.theguardian.com/world/africa/rss",
+    "https://www.theguardian.com/world/europe-news/rss",
   ],
   NORTH_AMERICA: [
     "https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml",
@@ -268,12 +270,16 @@ function normalizeForDedupe(title) {
   return title.toLowerCase().replace(/[^a-z0-9 ]/g, "").slice(0, 60);
 }
 
+// Hard cutoff — anything older than this never enters the pool at all, so
+// a severe-but-old story can never sit at the top of a list looking stale.
+const MAX_AGE_MS = 8 * 60 * 60 * 1000; // 8 hours
+
 function buildItem(raw, fallbackRegion) {
   const risk = classifyRisk(raw.title);
   if (!risk) return null;
 
   const ts = raw.pubDate ? new Date(raw.pubDate).getTime() : NaN;
-  if (!ts || isNaN(ts)) return null;
+  if (!ts || isNaN(ts) || Date.now() - ts > MAX_AGE_MS) return null;
 
   const loc = findLocation(`${raw.title} ${raw.description || ""}`);
   const region = loc ? loc.region : fallbackRegion;
@@ -328,10 +334,10 @@ export default async function handler(req, res) {
         items.push(item);
       }
 
-      items.sort((a, b) => {
-        if (a.risk !== b.risk) return a.risk === "HIGH" ? -1 : 1;
-        return b._ts - a._ts;
-      });
+      // Recency only — severity already filtered who gets in; sorting by
+      // risk on top of that is what was pushing older HIGH stories above
+      // fresher MEDIUM ones and making the list look stale.
+      items.sort((a, b) => b._ts - a._ts);
 
       regions[key] = items.slice(0, 8).map(({ _ts, ...rest }) => rest);
     }
@@ -346,10 +352,7 @@ export default async function handler(req, res) {
         all.push(item);
       }
     }
-    all.sort((a, b) => {
-      if (a.risk !== b.risk) return a.risk === "HIGH" ? -1 : 1;
-      return new Date(b.publishedAt) - new Date(a.publishedAt);
-    });
+    all.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
     // Short cache window — real RSS timestamps, refreshed often, so the
     // ticker and region boxes both stay genuinely close to real-time.
