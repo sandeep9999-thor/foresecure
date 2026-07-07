@@ -480,6 +480,9 @@ export default function ForeSecure() {
   const [newsLoading, setNewsLoading] = useState(false);
   const [newsUpdatedAt, setNewsUpdatedAt] = useState(null);
   const [locationModal, setLocationModal] = useState(null);
+  const [page, setPage] = useState("home"); // "home" | "alerts"
+  const [selectedAlert, setSelectedAlert] = useState(null);
+  const [alertRegionFilter, setAlertRegionFilter] = useState("ALL");
 
   function loadNews() {
     setNewsLoading(true);
@@ -555,6 +558,20 @@ export default function ForeSecure() {
   const tickerData = tickerSource;
   const tickerDuration = Math.max(28, tickerData.length * 6);
 
+  // Flatten every region's alerts into one deduped, most-recent-first list
+  // for the Live Alerts page.
+  const dedupedAlerts = (() => {
+    const pool = regionNews ? Object.values(regionNews).flat() : (liveArticles || []);
+    const seen = new Set();
+    return pool
+      .filter((a) => {
+        if (!a.url || seen.has(a.url)) return false;
+        seen.add(a.url);
+        return true;
+      })
+      .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+  })();
+
   return (
     <div style={{ background: COLORS.bg, color: COLORS.black, fontFamily: "'Inter', sans-serif", minHeight: "100vh" }}>
       <style>{`
@@ -578,10 +595,15 @@ export default function ForeSecure() {
         .sl-ticker-track:hover { animation-play-state: paused; }
         @keyframes sl-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         @keyframes sl-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes sl-pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.6); opacity: 0; } }
         .sl-nav-link { color: ${COLORS.slate}; text-decoration: none; font-size: 14.5px; font-weight: 500; }
         .sl-nav-link:hover { color: ${COLORS.black}; }
         .sl-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
         .sl-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .sl-split-view { display: grid; grid-template-columns: 1fr 1fr; }
+        @media (max-width: 900px) {
+          .sl-split-view { grid-template-columns: 1fr; }
+        }
         @media (max-width: 900px) {
           .sl-grid-4 { grid-template-columns: repeat(2, 1fr); }
           .sl-grid-2 { grid-template-columns: 1fr; }
@@ -598,19 +620,41 @@ export default function ForeSecure() {
       {/* NAV */}
       <header style={{ borderBottom: `1px solid ${COLORS.line}`, background: "rgba(247,246,243,0.94)", backdropFilter: "blur(6px)", position: "sticky", top: 0, zIndex: 40 }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <ForeSecureMark size={28} />
-            <div>
-              <div style={{ display: "inline-block" }}>
-                <span className="sl-display" style={{ fontWeight: 700, fontSize: 19, letterSpacing: "-0.02em", display: "block" }}>ForeSecure</span>
-                <img
-                  src="/images/brand/underline.jpg"
-                  alt=""
-                  style={{ display: "block", width: 130, height: 9, objectFit: "fill", borderRadius: 1, marginTop: 3 }}
-                />
+          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+            <button
+              onClick={() => { setPage("home"); setSelectedAlert(null); }}
+              style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", textAlign: "left" }}
+              aria-label="ForeSecure home"
+            >
+              <ForeSecureMark size={28} />
+              <div>
+                <div style={{ display: "inline-block" }}>
+                  <span className="sl-display" style={{ fontWeight: 700, fontSize: 19, letterSpacing: "-0.02em", display: "block", color: COLORS.black }}>ForeSecure</span>
+                  <img
+                    src="/images/brand/underline.jpg"
+                    alt=""
+                    style={{ display: "block", width: 130, height: 9, objectFit: "fill", borderRadius: 1, marginTop: 3 }}
+                  />
+                </div>
+                <span className="sl-mono" style={{ fontSize: 9.5, color: COLORS.red, fontWeight: 700, letterSpacing: "0.12em", display: "block", marginTop: 3 }}>MONITOR · ASSESS · PROTECT</span>
               </div>
-              <span className="sl-mono" style={{ fontSize: 9.5, color: COLORS.red, fontWeight: 700, letterSpacing: "0.12em", display: "block", marginTop: 3 }}>MONITOR · ASSESS · PROTECT</span>
-            </div>
+            </button>
+            <button
+              onClick={() => { setPage("alerts"); setSelectedAlert(null); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "inherit",
+                background: page === "alerts" ? COLORS.black : "#fff",
+                color: page === "alerts" ? "#fff" : COLORS.black,
+                border: `1.5px solid ${page === "alerts" ? COLORS.black : COLORS.line}`,
+                borderRadius: 20, padding: "7px 14px 7px 10px", fontSize: 13, fontWeight: 600,
+              }}
+            >
+              <span style={{ position: "relative", display: "flex", width: 8, height: 8 }}>
+                <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: COLORS.red, animation: "sl-pulse 1.6s ease-out infinite" }} />
+                <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: COLORS.red }} />
+              </span>
+              Live Alerts
+            </button>
           </div>
           <nav className="sl-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 32 }}>
             {NAV_LINKS.map((l) => <a key={l} href="#" className="sl-nav-link">{l}</a>)}
@@ -652,6 +696,8 @@ export default function ForeSecure() {
       </header>
       <FullScreenMenu open={dotMenuOpen} onClose={() => setDotMenuOpen(false)} />
 
+      {page === "home" && (
+      <>
       {/* HERO — full viewport: nav (above) + slideshow + single tagline. Rest of the page lives below, reached by scrolling. */}
       <section style={{ position: "relative", background: COLORS.black, overflow: "hidden", height: "calc(100vh - 73px)", minHeight: 520, display: "flex", alignItems: "flex-end" }}>
         <HeroVideo onCaptionChange={setCaptionIndex} />
@@ -665,8 +711,10 @@ export default function ForeSecure() {
           <ChevronDown size={22} />
         </div>
       </section>
+      </>
+      )}
 
-      {/* TICKER — signature element, driven by live /api/news when available */}
+      {/* TICKER — signature element, driven by live /api/news when available; shown on both pages */}
       <section style={{ background: COLORS.black, padding: "16px 0", overflow: "hidden", borderTop: "1px solid #24272E" }}>
         <div className="sl-ticker-track" style={{ animationDuration: `${tickerDuration}s` }}>
           {[...tickerData, ...tickerData].map((item, i) => {
@@ -703,6 +751,8 @@ export default function ForeSecure() {
       </section>
       <LocationModal data={locationModal} onClose={() => setLocationModal(null)} />
 
+      {page === "home" && (
+      <>
       {/* TRUSTED-BY STATS BAR */}
       <section style={{ maxWidth: 1160, margin: "0 auto", padding: "56px 24px 0" }}>
         <Reveal>
@@ -921,62 +971,196 @@ export default function ForeSecure() {
         </div>
       </section>
 
-      {/* INSIGHTS / NEWS */}
+      {/* INSIGHTS / NEWS — moved to its own Live Alerts page; this is just a teaser */}
       <section style={{ maxWidth: 1160, margin: "0 auto", padding: "100px 24px 0" }}>
         <Reveal>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div className="sl-card" style={{ padding: "40px 36px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
             <div>
               <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>Intelligence desk</div>
-              <h2 className="sl-display" style={{ fontSize: "clamp(26px, 3vw, 34px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>Latest briefings</h2>
+              <h2 className="sl-display" style={{ fontSize: "clamp(24px, 3vw, 30px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>
+                Live, high and medium-risk alerts — updated continuously.
+              </h2>
+              <p style={{ fontSize: 14.5, color: COLORS.slate, marginTop: 10, maxWidth: 520 }}>
+                {liveArticles && liveArticles.length > 0
+                  ? `${liveArticles.length} active briefings across APAC, EMEA, North America and Latin America.`
+                  : "Loading the latest briefings…"}
+              </p>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-              <button
-                onClick={loadNews}
-                disabled={newsLoading}
-                style={{
-                  display: "flex", alignItems: "center", gap: 6, background: "none", border: "none",
-                  color: COLORS.red, fontWeight: 600, fontSize: 14, cursor: newsLoading ? "default" : "pointer",
-                  opacity: newsLoading ? 0.6 : 1,
-                }}
-              >
-                <RefreshCw size={15} style={{ animation: newsLoading ? "sl-spin 1s linear infinite" : "none" }} />
-                {newsLoading ? "Refreshing…" : "Refresh"}
-              </button>
-              <a href="#" className="sl-nav-link" style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
-                View all briefings <ArrowUpRight size={15} />
-              </a>
-            </div>
+            <button onClick={() => { setPage("alerts"); setSelectedAlert(null); }} className="sl-btn-primary" style={{ flexShrink: 0 }}>
+              View Live Alerts <ArrowUpRight size={16} />
+            </button>
           </div>
         </Reveal>
-        <div className="sl-grid-4" style={{ marginTop: 32, gridTemplateColumns: "repeat(3, 1fr)" }}>
-          {(liveArticles && liveArticles.length > 0 ? liveArticles.slice(0, 9) : insightsArticles).map((item, i) => (
-            <Reveal key={item.url || item.title} delay={i * 90}>
-              <button
-                onClick={() => item.url && setLocationModal({ title: item.title, url: item.url, source: item.source, location: item.location || null })}
-                className="sl-card"
-                style={{ display: "block", width: "100%", padding: 22, height: "100%", textDecoration: "none", color: "inherit", background: "#fff", textAlign: "left", cursor: item.url ? "pointer" : "default", font: "inherit" }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span className="sl-mono" style={{ fontSize: 11, color: COLORS.red, background: COLORS.goldLight, padding: "3px 9px", borderRadius: 3, fontWeight: 600 }}>{item.tag}</span>
-                  <span className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight }}>
-                    {item.publishedAt ? timeAgo(item.publishedAt) : item.date}
-                  </span>
-                </div>
-                <h3 className="sl-display" style={{ fontSize: 16.5, fontWeight: 600, marginTop: 14, lineHeight: 1.4 }}>{item.title}</h3>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 12.5, color: COLORS.slateLight }}>
-                  {item.location ? <MapPin size={14} /> : <Newspaper size={14} />}
-                  {item.location ? item.location.name : (item.source || item.read)}
-                </div>
-              </button>
-            </Reveal>
-          ))}
-        </div>
-        {newsError && (
-          <p style={{ fontSize: 12.5, color: COLORS.slateLight, marginTop: 16 }}>
-            Live feed unavailable right now — showing sample briefings instead.
-          </p>
-        )}
       </section>
+
+      </>
+      )}
+
+      {/* LIVE ALERTS PAGE */}
+      {page === "alerts" && (
+        <section style={{ maxWidth: 1160, margin: "0 auto", padding: "40px 24px 100px" }}>
+          {!selectedAlert ? (
+            <>
+              <Reveal>
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+                  <div>
+                    <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>Live Alerts</div>
+                    <h1 className="sl-display" style={{ fontSize: "clamp(28px, 3.4vw, 38px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>
+                      Every active high and medium-risk briefing.
+                    </h1>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+                    <button
+                      onClick={loadNews}
+                      disabled={newsLoading}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 6, background: "none", border: "none",
+                        color: COLORS.red, fontWeight: 600, fontSize: 14, cursor: newsLoading ? "default" : "pointer",
+                        opacity: newsLoading ? 0.6 : 1,
+                      }}
+                    >
+                      <RefreshCw size={15} style={{ animation: newsLoading ? "sl-spin 1s linear infinite" : "none" }} />
+                      {newsLoading ? "Refreshing…" : "Refresh"}
+                    </button>
+                    <div className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight, display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: newsLoading ? COLORS.gold : "#3FA65B" }} />
+                      {newsUpdatedAt ? `Updated ${timeAgo(newsUpdatedAt)}` : "Live"}
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 28 }}>
+                {["ALL", ...REGION_ORDER].map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => setAlertRegionFilter(key)}
+                    style={{
+                      background: alertRegionFilter === key ? COLORS.black : "#fff",
+                      color: alertRegionFilter === key ? "#fff" : COLORS.slate,
+                      border: `1.5px solid ${alertRegionFilter === key ? COLORS.black : COLORS.line}`,
+                      borderRadius: 20, padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                    }}
+                  >
+                    {key === "ALL" ? "All regions" : REGION_LABELS[key]}
+                  </button>
+                ))}
+              </div>
+
+              <div className="sl-grid-4" style={{ marginTop: 28, gridTemplateColumns: "repeat(3, 1fr)" }}>
+                {dedupedAlerts
+                  .filter((a) => alertRegionFilter === "ALL" || a.region === alertRegionFilter)
+                  .map((item, i) => (
+                    <Reveal key={item.url} delay={Math.min(i, 8) * 60}>
+                      <button
+                        onClick={() => setSelectedAlert(item)}
+                        className="sl-card"
+                        style={{ display: "block", width: "100%", padding: 22, height: "100%", textAlign: "left", cursor: "pointer", font: "inherit", background: "#fff" }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <span className="sl-mono" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.03em", color: item.risk === "HIGH" ? "#fff" : COLORS.red, background: item.risk === "HIGH" ? COLORS.red : COLORS.goldLight, padding: "3px 9px", borderRadius: 3 }}>
+                            {item.risk} RISK
+                          </span>
+                          <span className="sl-mono" style={{ fontSize: 11, color: COLORS.red, background: COLORS.goldLight, padding: "3px 9px", borderRadius: 3, fontWeight: 600 }}>{item.tag}</span>
+                          <span className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight }}>{timeAgo(item.publishedAt)}</span>
+                        </div>
+                        <h3 className="sl-display" style={{ fontSize: 16.5, fontWeight: 600, marginTop: 14, lineHeight: 1.4 }}>{item.title}</h3>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 12.5, color: COLORS.slateLight }}>
+                          {item.location ? <MapPin size={14} /> : <Newspaper size={14} />}
+                          {item.location ? item.location.name : item.source}
+                        </div>
+                      </button>
+                    </Reveal>
+                  ))}
+              </div>
+              {dedupedAlerts.length === 0 && (
+                <p style={{ fontSize: 13.5, color: COLORS.slateLight, marginTop: 24 }}>
+                  {newsLoading ? "Loading live alerts…" : "No active high or medium-risk alerts right now."}
+                </p>
+              )}
+            </>
+          ) : (
+            <div>
+              <button
+                onClick={() => setSelectedAlert(null)}
+                style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", color: COLORS.slate, fontSize: 14, fontWeight: 600, padding: 0, marginBottom: 20, font: "inherit" }}
+              >
+                <ArrowRight size={16} style={{ transform: "rotate(180deg)" }} /> Back to Live Alerts
+              </button>
+
+              <div className="sl-split-view sl-card" style={{ overflow: "hidden", minHeight: "68vh" }}>
+                {/* LEFT — the news */}
+                <div style={{ padding: "32px 34px", display: "flex", flexDirection: "column", overflowY: "auto" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span className="sl-mono" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.03em", color: selectedAlert.risk === "HIGH" ? "#fff" : COLORS.red, background: selectedAlert.risk === "HIGH" ? COLORS.red : COLORS.goldLight, padding: "3px 9px", borderRadius: 3 }}>
+                      {selectedAlert.risk} RISK
+                    </span>
+                    <span className="sl-mono" style={{ fontSize: 11, color: COLORS.red, background: COLORS.goldLight, padding: "3px 9px", borderRadius: 3, fontWeight: 600 }}>{selectedAlert.tag}</span>
+                  </div>
+
+                  <h2 className="sl-display" style={{ fontSize: 24, fontWeight: 700, marginTop: 18, lineHeight: 1.35 }}>{selectedAlert.title}</h2>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 18, fontSize: 13.5, color: COLORS.slate }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Clock size={15} color={COLORS.slateLight} /> Reported {timeAgo(selectedAlert.publishedAt)}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Newspaper size={15} color={COLORS.slateLight} /> {selectedAlert.source}
+                    </div>
+                    {selectedAlert.location && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <MapPin size={15} color={COLORS.slateLight} /> {selectedAlert.location.name}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ borderTop: `1px solid ${COLORS.line}`, marginTop: 24, paddingTop: 24, flex: 1 }}>
+                    <div className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 10 }}>Description</div>
+                    <p style={{ fontSize: 14.5, color: COLORS.slate, lineHeight: 1.65 }}>
+                      {selectedAlert.description || "No summary was provided by the source. Read the full report for details."}
+                    </p>
+                  </div>
+
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
+                    {selectedAlert.url && (
+                      <a href={selectedAlert.url} target="_blank" rel="noreferrer" className="sl-btn-primary" style={{ fontSize: 13.5 }}>
+                        Read full article <ExternalLink size={14} />
+                      </a>
+                    )}
+                    {selectedAlert.location && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${selectedAlert.location.lat},${selectedAlert.location.lng}`}
+                        target="_blank" rel="noreferrer" className="sl-btn-ghost" style={{ fontSize: 13.5 }}
+                      >
+                        <MapPinned size={15} /> Open in Google Maps
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                {/* RIGHT — the map */}
+                <div style={{ background: COLORS.bg, minHeight: 320 }}>
+                  {selectedAlert.location ? (
+                    <iframe
+                      title="Alert location"
+                      src={`https://www.google.com/maps?q=${selectedAlert.location.lat},${selectedAlert.location.lng}&z=8&output=embed`}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0, display: "block", minHeight: 320 }}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: COLORS.slateLight, fontSize: 13.5, padding: 40, textAlign: "center" }}>
+                      <MapPinned size={30} color={COLORS.slateLight} style={{ marginBottom: 10 }} />
+                      No precise location could be identified for this alert.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* NEWSLETTER */}
       <section style={{ maxWidth: 1160, margin: "0 auto", padding: "100px 24px 0" }}>

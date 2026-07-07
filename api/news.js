@@ -303,6 +303,7 @@ function buildItem(raw, fallbackRegion) {
     publishedAt: new Date(ts).toISOString(),
     tag: categorize(raw.title),
     risk,
+    description: (raw.description || "").slice(0, 400),
     location: loc ? { name: loc.name, lat: loc.lat, lng: loc.lng } : null,
     region,
     _ts: ts,
