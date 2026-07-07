@@ -11,9 +11,11 @@
 // as you had it — only the fetching layer underneath changed.
 //
 // To keep boxes from running dry: risk-filtered RSS naturally yields fewer
-// matches than an unfiltered feed, so we pull from EIGHT trusted outlets
-// (not two or three) to keep enough fresh, on-topic headlines flowing per
-// region at any given moment.
+// matches than an unfiltered feed, so we now pull from well over a dozen
+// trusted outlets across all four regions. Latin America specifically was
+// coming up empty because its coverage is mostly published in Spanish and
+// Portuguese — the keyword filter below now matches both languages, and
+// BBC Mundo (Spanish) and G1 (Brazilian Portuguese) were added as sources.
 
 function categorize(text = "") {
   const t = text.toLowerCase();
@@ -26,11 +28,14 @@ function categorize(text = "") {
 // Only genuinely significant stories survive — routine politics, business,
 // sports, entertainment, etc. are excluded entirely rather than shown at
 // low priority.
+// English + Spanish terms combined — most Latin America coverage is
+// published in Spanish, so an English-only filter was silently excluding
+// almost everything from that region even when the feed had content.
 const HIGH_RISK_TERMS =
-  /earthquake|tsunami|explosion|bomb(ing)?|terroris(t|m)|mass shooting|missile|air ?strike|invasion|coup|state of emergency|evacuat|wildfire|hurricane|cyclone|typhoon|flood(ing)?|death toll|killed|dead|wounded|injured|martial law|riot|militant|gunman|gunfire|hostage|landslide|volcano|collapse|derail|plane crash|crash kills|deadly/i;
+  /earthquake|tsunami|explosion|bomb(ing)?|terroris(t|m)|mass shooting|missile|air ?strike|invasion|coup|state of emergency|evacuat|wildfire|hurricane|cyclone|typhoon|flood(ing)?|death toll|killed|dead|wounded|injured|martial law|riot|militant|gunman|gunfire|hostage|landslide|volcano|collapse|derail|plane crash|crash kills|deadly|terremoto|tsunami|explosión|atentado|terrorismo|tiroteo|misil|ataque aéreo|invasión|golpe de estado|estado de emergencia|evacuaci[oó]n|incendio forestal|huracán|ciclón|tifón|inundaci[oó]n|muertos|heridos|ley marcial|disturbios|militante|secuestro|deslizamiento|volc[aá]n|colapso|choque mortal/i;
 
 const MEDIUM_RISK_TERMS =
-  /protest|strike|warning|advisory|storm|security threat|clash(es)?|unrest|outbreak|tension|sanction|arrest|threat|warns?|shutdown|blockade|standoff|deploy(s|ed)? troops|military|emergency|breaking|urgent/i;
+  /protest|strike|warning|advisory|storm|security threat|clash(es)?|unrest|outbreak|tension|sanction|arrest|threat|warns?|shutdown|blockade|standoff|deploy(s|ed)? troops|military|emergency|breaking|urgent|protesta|huelga|advertencia|alerta|tormenta|amenaza|enfrentamientos|disturbio|brote|tensi[oó]n|sanci[oó]n|arresto|advierte|cierre|bloqueo|despliegue de tropas|militar|emergencia|urgente/i;
 
 function classifyRisk(title) {
   if (HIGH_RISK_TERMS.test(title)) return "HIGH";
@@ -184,10 +189,16 @@ const DIRECT_REGION_FEEDS = {
   NORTH_AMERICA: [
     "https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml",
     "https://www.theguardian.com/us-news/rss",
+    "http://rss.cnn.com/rss/cnn_us.rss",
+    "https://abcnews.go.com/abcnews/usheadlines",
+    "https://rssfeeds.usatoday.com/usatoday-NewsTopStories",
+    "https://www.cbsnews.com/latest/rss/main",
   ],
   LATIN_AMERICA: [
     "https://feeds.bbci.co.uk/news/world/latin_america/rss.xml",
     "https://www.theguardian.com/world/americas/rss",
+    "https://feeds.bbci.co.uk/mundo/rss.xml",
+    "https://g1.globo.com/rss/g1/",
   ],
 };
 
@@ -272,7 +283,7 @@ function normalizeForDedupe(title) {
 
 // Hard cutoff — anything older than this never enters the pool at all, so
 // a severe-but-old story can never sit at the top of a list looking stale.
-const MAX_AGE_MS = 8 * 60 * 60 * 1000; // 8 hours
+const MAX_AGE_MS = 10 * 60 * 60 * 1000; // 10 hours
 
 function buildItem(raw, fallbackRegion) {
   const risk = classifyRisk(raw.title);
@@ -358,7 +369,7 @@ export default async function handler(req, res) {
     // ticker and region boxes both stay genuinely close to real-time.
     res.setHeader("Cache-Control", "s-maxage=90, stale-while-revalidate=60");
     return res.status(200).json({
-      all: all.slice(0, 16),
+      all: all.slice(0, 20),
       regions,
       updatedAt: new Date().toISOString(),
     });
