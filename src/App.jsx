@@ -3,7 +3,8 @@ import {
   Plane, CloudLightning, ShieldAlert, HeartPulse, ArrowRight,
   MapPin, Clock, CheckCircle2, Menu, X, Mail, Bell, Activity,
   Globe2, Radio, Lock, Building2, Newspaper, ArrowUpRight,
-  MoreHorizontal, ChevronRight, ChevronDown, RefreshCw, MapPinned, ExternalLink
+  MoreHorizontal, ChevronRight, ChevronDown, RefreshCw, MapPinned, ExternalLink,
+  Image as ImageIcon
 } from "lucide-react";
 
 const FONT_IMPORT_URL =
@@ -62,6 +63,252 @@ const officeLocations = [
   { city: "Nairobi", role: "Field intelligence hub" },
 ];
 
+// ---- Top navigation menu structure (dropdowns, click-to-open) ----
+const NAV_MENU = [
+  {
+    label: "Consulting",
+    href: "#",
+    items: [
+      { label: "Risk Consulting", href: "#" },
+      {
+        label: "Security Design",
+        href: "#",
+        items: [
+          { label: "Physical Security Design and Project Management", href: "#" },
+          { label: "Physical Security Operations Center Design", href: "#" },
+          { label: "Enterprise Electronic Security Technology Transformation", href: "#" },
+          { label: "Enterprise Physical Security Master Plans", href: "#" },
+        ],
+      },
+      { label: "Protective Services", href: "#" },
+      { label: "Cybersecurity and Resilience", href: "#" },
+      { label: "Environmental, Social & Governance", href: "#" },
+      {
+        label: "Climate & Disaster Risk Resilience",
+        href: "#",
+        items: [
+          { label: "Climate Risk Assessment and Resilience", href: "#" },
+          { label: "Disaster Risk Management", href: "#" },
+          { label: "Carbon Footprint Assessment", href: "#" },
+          { label: "Hydrological Assessment and Water Related Services", href: "#" },
+        ],
+      },
+      { label: "Geospatial Solutions", href: "#" },
+      { label: "Investigations", href: "#" },
+      {
+        label: "Others",
+        href: "#",
+        items: [
+          { label: "Counter Drone Consulting", href: "#" },
+          { label: "Vehicle Dynamics Assessment (VDA) / Hostile Vehicle Attack Assessment", href: "#" },
+          { label: "Assessment of Blast / Explosive / High Impact Risk", href: "#" },
+        ],
+      },
+    ],
+  },
+  { label: "Resourcing", href: "#" },
+  {
+    label: "Insights",
+    href: "#",
+    items: [
+      { label: "Blogs", href: "#" },
+      { label: "Special Advisory", href: "#" },
+      { label: "Events", href: "#" },
+    ],
+  },
+  { label: "Careers", href: "#" },
+  {
+    label: "About us",
+    href: "#",
+    items: [
+      { label: "Our Story", href: "#" },
+      { label: "Our Team", href: "#" },
+    ],
+  },
+];
+
+// ---- Content shown when a nav dropdown leaf item is clicked. Image slots
+// are left as empty placeholders for real photography to be dropped in later. ----
+const SERVICE_CONTENT = {
+  "Risk Consulting": {
+    category: "Consulting",
+    summary: "Turning uncertainty into a plan you can act on.",
+    body: [
+      "Every organization carries exposure it can't always see — in its supply lines, its people's movements, its facilities, or the political weather around a market it operates in. ForeSecure's risk consulting practice starts by mapping that exposure properly: what could go wrong, how likely it is, and what it would actually cost the business if it did.",
+      "From there, our analysts build a mitigation plan that fits the client rather than a generic playbook. That can mean rewriting an incident response procedure, running a tabletop exercise with leadership, or standing up a continuous monitoring feed so a threat is caught while it's still a rumor rather than a headline.",
+      "We work across banking, manufacturing, energy, logistics, and technology — sectors where an operational, compliance, or reputational shock can move markets or shut a site down. The goal is always the same: give decision-makers enough warning and enough clarity to act early, not just react.",
+    ],
+  },
+  "Physical Security Design and Project Management": {
+    category: "Security Design",
+    summary: "Designing protection into a building, not bolting it on afterward.",
+    body: [
+      "Retrofitting security into a finished building is expensive and full of compromises. Our design team works alongside architects and facility planners from the earliest drawings, positioning cameras, access points, barriers, and control rooms so they do their job without fighting the building's layout.",
+      "Once a design is signed off, we stay involved through procurement and installation — managing vendors, checking work against spec, and testing systems before handover — so what gets built actually matches what was designed.",
+    ],
+  },
+  "Physical Security Operations Center Design": {
+    category: "Security Design",
+    summary: "The room where every camera, alarm, and alert comes together.",
+    body: [
+      "A security operations center is only as good as the workflows built around it. We design the physical layout, technology stack, and staffing model of a client's control room so operators can spot a developing incident quickly and hand it to the right team without confusion.",
+      "That includes everything from monitor-wall ergonomics and shift rostering to the escalation logic that decides when a flagged event becomes a phone call to a duty manager.",
+    ],
+  },
+  "Enterprise Electronic Security Technology Transformation": {
+    category: "Security Design",
+    summary: "Replacing a patchwork of old systems with one that actually talks to itself.",
+    body: [
+      "Large organizations often accumulate security technology one acquisition or building at a time, ending up with a mismatched collection of access control, CCTV, and alarm systems that don't share data. We plan and run the transition to a unified platform, sequencing the rollout so sites stay protected throughout the changeover.",
+      "The result is a single view of security posture across every site, instead of a dozen disconnected local ones.",
+    ],
+  },
+  "Enterprise Physical Security Master Plans": {
+    category: "Security Design",
+    summary: "A long-range roadmap for protecting every site a company owns.",
+    body: [
+      "A master plan sets out, site by site and year by year, where security investment should go and why — based on a consistent risk methodology rather than whichever building shouted loudest last budget cycle.",
+      "We build these plans to survive organizational change: new leadership, new geographies, and new threats can be absorbed without starting over.",
+    ],
+  },
+  "Protective Services": {
+    category: "Consulting",
+    summary: "Keeping people safe as they move, not just where they sit.",
+    body: [
+      "Executives, project teams, and traveling staff are exposed the moment they leave a secured building. Our protective services cover close protection, journey management, and advance work — route recces, local liaison, and contingency planning — for movement through higher-risk environments.",
+      "Every deployment starts with understanding the specific reason for travel and the specific risks of the destination, rather than applying a one-size-fits-all security detail.",
+    ],
+  },
+  "Cybersecurity and Resilience": {
+    category: "Consulting",
+    summary: "Treating a breach as a business continuity problem, not just an IT one.",
+    body: [
+      "A cyberattack rarely stays contained to a server room — it can halt production lines, expose customer data, or freeze payment systems. Our cybersecurity and resilience practice works across both domains: hardening technical defenses and building the organizational response plan for when prevention isn't enough.",
+      "That includes vulnerability assessments, incident response planning, and tabletop simulations that get technical and business teams rehearsing the same playbook together.",
+    ],
+  },
+  "Environmental, Social & Governance": {
+    category: "Consulting",
+    summary: "Making ESG measurable instead of aspirational.",
+    body: [
+      "ESG commitments only mean something if they can be tracked, audited, and reported credibly. We help organizations build the assessment frameworks, data collection processes, and governance structures that turn sustainability goals into figures a board — and a regulator — can trust.",
+      "This spans environmental impact assessments, social risk reviews across supply chains, and governance audits aligned to the standards clients are actually held to.",
+    ],
+  },
+  "Climate Risk Assessment and Resilience": {
+    category: "Climate & Disaster Risk Resilience",
+    summary: "Understanding how a changing climate touches a specific site.",
+    body: [
+      "Flood maps, heat projections, and storm-frequency data mean little until they're translated into what they imply for a specific factory, port, or office campus. We assess physical climate risk at the site level and build resilience plans — engineering, insurance, and operational — around what the data actually shows for that location.",
+    ],
+  },
+  "Disaster Risk Management": {
+    category: "Climate & Disaster Risk Resilience",
+    summary: "Planning for the event no one wants to plan for.",
+    body: [
+      "Earthquakes, cyclones, and industrial accidents don't wait for a convenient time. Our disaster risk management work builds the response plans, evacuation procedures, and recovery playbooks that let an organization act fast and coherently when the unexpected happens, rather than improvising under pressure.",
+    ],
+  },
+  "Carbon Footprint Assessment": {
+    category: "Climate & Disaster Risk Resilience",
+    summary: "Measuring emissions with enough rigor to report them publicly.",
+    body: [
+      "We calculate an organization's greenhouse gas footprint across its operations and supply chain using recognized accounting methods, so the resulting figures hold up to investor and regulatory scrutiny — and give the client a real baseline to reduce from.",
+    ],
+  },
+  "Hydrological Assessment and Water Related Services": {
+    category: "Climate & Disaster Risk Resilience",
+    summary: "Water risk, from flooding to scarcity.",
+    body: [
+      "Water is a two-sided risk: too much of it floods a site, too little disrupts operations that depend on it. We model local hydrology, flood exposure, and water availability to help clients plan facilities, insurance, and continuity measures around the water risk specific to their location.",
+    ],
+  },
+  "Geospatial Solutions": {
+    category: "Consulting",
+    summary: "Putting risk on a map, literally.",
+    body: [
+      "Spreadsheets don't show you that three suppliers sit in the same flood plain. Our geospatial team layers threat data, asset locations, and terrain analysis onto interactive maps, so patterns that are invisible in a table become obvious at a glance — and decisions about where to build, route, or evacuate get easier to make.",
+    ],
+  },
+  "Investigations": {
+    category: "Consulting",
+    summary: "Finding out what actually happened, discreetly and defensibly.",
+    body: [
+      "Fraud, IP theft, insider misconduct, and vendor due diligence all call for investigative work that can withstand later scrutiny — whether that's an internal disciplinary process, a court case, or a regulator's questions. Our investigators combine fieldwork with digital forensics and background research to build findings a client can act on with confidence.",
+    ],
+  },
+  "Counter Drone Consulting": {
+    category: "Others",
+    summary: "Defending airspace that most security plans still ignore.",
+    body: [
+      "Unauthorized drones can carry cameras, payloads, or simply disrupt operations at airports, stadiums, and industrial sites. We assess a site's exposure to drone-based threats and design detection and mitigation strategies — sensor placement, response protocols, and coordination with local authorities — suited to what's actually flying overhead.",
+    ],
+  },
+  "Vehicle Dynamics Assessment (VDA) / Hostile Vehicle Attack Assessment": {
+    category: "Others",
+    summary: "Stress-testing a site against a vehicle used as a weapon.",
+    body: [
+      "Vehicle-borne attacks on crowded or high-value sites are a recognized and studied threat. We assess approach routes, speeds, and barrier performance to determine whether a site's perimeter can actually stop or slow a hostile vehicle, and recommend the bollards, planters, or standoff distances that close the gap.",
+    ],
+  },
+  "Assessment of Blast / Explosive / High Impact Risk": {
+    category: "Others",
+    summary: "Understanding what an explosion would do to a structure — before it happens.",
+    body: [
+      "We model blast loads and structural response to identify which parts of a building are most vulnerable to an explosive event, and recommend hardening measures — from glazing upgrades to structural reinforcement — that reduce injury and damage if the worst occurs.",
+    ],
+  },
+  "Resourcing": {
+    category: "Resourcing",
+    summary: "Embedded security talent, without the client running a security recruitment desk.",
+    body: [
+      "Not every organization needs a full in-house security department, but most need reliable security expertise on-site. We place vetted security managers, analysts, and operations staff directly into client teams, handling recruitment, training, and quality oversight so the client gets the expertise without carrying the HR overhead.",
+    ],
+  },
+  "Careers": {
+    category: "Careers",
+    summary: "Join the team keeping people and operations safe, worldwide.",
+    body: [
+      "ForeSecure hires analysts, field specialists, and engineers who want their work to matter the day something actually goes wrong. We look for people comfortable with ambiguity, careful under pressure, and genuinely curious about how risk moves around the world.",
+    ],
+  },
+  "Blogs": {
+    category: "Insights",
+    summary: "Field notes from the analysts doing the work.",
+    body: [
+      "Our blog covers the trends, incidents, and lessons our own risk consultants are tracking — from emerging cyber threats to how climate risk is reshaping site selection. It's written by the people doing the assessments, not a marketing team repackaging headlines.",
+    ],
+  },
+  "Special Advisory": {
+    category: "Insights",
+    summary: "Deep-dive briefings on a single, developing situation.",
+    body: [
+      "When a single event — a coup, a major storm system, a regulatory shift — has outsized implications for clients operating in the region, we publish a special advisory: a focused briefing on what's happening, what could happen next, and what it means operationally.",
+    ],
+  },
+  "Events": {
+    category: "Insights",
+    summary: "Where our analysts meet the people managing risk on the ground.",
+    body: [
+      "From closed-door briefings for security leaders to public panels on emerging threats, our events are built around conversation, not just presentation. Check back for upcoming sessions, or get in touch to suggest a topic worth covering.",
+    ],
+  },
+  "Our Story": {
+    category: "About us",
+    summary: "How a watch desk became a global risk practice.",
+    body: [
+      "ForeSecure grew out of a simple frustration: the organizations that most needed early warning of a crisis were usually the last to hear about it. What began as a small monitoring desk has grown into a global practice spanning consulting, protective services, and technology — but the original goal hasn't changed: get the right information to the right person before it's too late to act on it.",
+    ],
+  },
+  "Our Team": {
+    category: "About us",
+    summary: "Analysts, engineers, and field operators — not just consultants in suits.",
+    body: [
+      "Our team blends former military and law enforcement officers, security engineers, data analysts, and regional specialists who've actually worked in the markets they cover. That mix is deliberate: understanding a risk on paper and understanding it on the ground are different skills, and our clients need both.",
+    ],
+  },
+};
+
 function useReveal() {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -104,6 +351,134 @@ function ForeSecureMark({ size = 30 }) {
       <rect x="14" y="21" width="12" height="10" rx="2" fill={COLORS.gold} />
       <path d="M16.5 21 V17.5 a3.5 3.5 0 0 1 7 0 V21" stroke={COLORS.gold} strokeWidth="2" fill="none" />
     </svg>
+  );
+}
+
+// ---- Desktop dropdown nav item (click to open, supports one nested flyout level) ----
+function NavMenuItem({ item, isOpen, onToggle, onNavigate }) {
+  const [subOpen, setSubOpen] = useState(null);
+  const hasChildren = Boolean(item.items && item.items.length);
+
+  return (
+    <div style={{ position: "relative" }}>
+      {hasChildren ? (
+        <button
+          onClick={onToggle}
+          className="sl-nav-link"
+          style={{
+            display: "flex", alignItems: "center", gap: 5, background: "none", border: "none",
+            cursor: "pointer", padding: 0, font: "inherit", color: isOpen ? COLORS.black : COLORS.slate,
+          }}
+        >
+          {item.label}
+          <ChevronDown size={14} style={{ transition: "transform 0.2s ease", transform: isOpen ? "rotate(180deg)" : "none" }} />
+        </button>
+      ) : (
+        <button
+          onClick={() => onNavigate(item.label)}
+          className="sl-nav-link"
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit" }}
+        >
+          {item.label}
+        </button>
+      )}
+
+      {hasChildren && isOpen && (
+        <div
+          className="sl-card sl-dropdown-panel"
+          style={{ position: "absolute", top: "calc(100% + 16px)", left: 0 }}
+        >
+          {item.items.map((sub) => {
+            const subHasChildren = Boolean(sub.items && sub.items.length);
+            return (
+              <div
+                key={sub.label}
+                style={{ position: "relative" }}
+                onMouseEnter={() => subHasChildren && setSubOpen(sub.label)}
+                onMouseLeave={() => subHasChildren && setSubOpen(null)}
+              >
+                <button
+                  className="sl-dropdown-link"
+                  style={{ width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", font: "inherit" }}
+                  onClick={() => {
+                    if (subHasChildren) {
+                      setSubOpen((s) => (s === sub.label ? null : sub.label));
+                    } else {
+                      onNavigate(sub.label);
+                    }
+                  }}
+                >
+                  <span>{sub.label}</span>
+                  {subHasChildren && <ChevronRight size={14} color={COLORS.slateLight} style={{ flexShrink: 0 }} />}
+                </button>
+
+                {subHasChildren && subOpen === sub.label && (
+                  <div className="sl-card sl-dropdown-panel sl-dropdown-panel--flyout">
+                    {sub.items.map((leaf) => (
+                      <button
+                        key={leaf.label}
+                        className="sl-dropdown-link"
+                        style={{ width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", font: "inherit" }}
+                        onClick={() => onNavigate(leaf.label)}
+                      >
+                        <span>{leaf.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- Mobile accordion nav (click to expand, nests naturally with <details>) ----
+function MobileNavAccordion({ menu, onNavigate }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      {menu.map((item) => {
+        const hasChildren = Boolean(item.items && item.items.length);
+        if (!hasChildren) {
+          return (
+            <button key={item.label} onClick={() => onNavigate(item.label)} className="sl-nav-link" style={{ padding: "10px 0", textAlign: "left", background: "none", border: "none", cursor: "pointer", font: "inherit" }}>
+              {item.label}
+            </button>
+          );
+        }
+        return (
+          <details key={item.label} className="sl-mobile-details">
+            <summary className="sl-nav-link">{item.label}</summary>
+            <div style={{ display: "flex", flexDirection: "column", paddingLeft: 14 }}>
+              {item.items.map((sub) => {
+                const subHasChildren = Boolean(sub.items && sub.items.length);
+                if (!subHasChildren) {
+                  return (
+                    <button key={sub.label} onClick={() => onNavigate(sub.label)} className="sl-nav-link" style={{ padding: "8px 0", fontSize: 13.5, textAlign: "left", background: "none", border: "none", cursor: "pointer", font: "inherit" }}>
+                      {sub.label}
+                    </button>
+                  );
+                }
+                return (
+                  <details key={sub.label} className="sl-mobile-details">
+                    <summary className="sl-nav-link" style={{ fontSize: 13.5 }}>{sub.label}</summary>
+                    <div style={{ display: "flex", flexDirection: "column", paddingLeft: 14 }}>
+                      {sub.items.map((leaf) => (
+                        <button key={leaf.label} onClick={() => onNavigate(leaf.label)} className="sl-nav-link" style={{ padding: "8px 0", fontSize: 12.5, textAlign: "left", background: "none", border: "none", cursor: "pointer", font: "inherit" }}>
+                          {leaf.label}
+                        </button>
+                      ))}
+                    </div>
+                  </details>
+                );
+              })}
+            </div>
+          </details>
+        );
+      })}
+    </div>
   );
 }
 
@@ -465,11 +840,11 @@ function LocationModal({ data, onClose }) {
   );
 }
 
-const NAV_LINKS = ["Platform", "Solutions", "Intelligence", "Resources"];
-
 export default function ForeSecure() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dotMenuOpen, setDotMenuOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState(null);
+  const navRef = useRef(null);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
@@ -480,9 +855,35 @@ export default function ForeSecure() {
   const [newsLoading, setNewsLoading] = useState(false);
   const [newsUpdatedAt, setNewsUpdatedAt] = useState(null);
   const [locationModal, setLocationModal] = useState(null);
-  const [page, setPage] = useState("home"); // "home" | "alerts"
+  const [page, setPage] = useState("home"); // "home" | "alerts" | "service"
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [alertRegionFilter, setAlertRegionFilter] = useState("ALL");
+  const [selectedService, setSelectedService] = useState(null);
+
+  function handleNavigate(label) {
+    setSelectedService(label);
+    setPage("service");
+    setOpenMenu(null);
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
+
+  // Close the open nav dropdown on outside click or Escape.
+  useEffect(() => {
+    if (!openMenu) return;
+    function handleClick(e) {
+      if (navRef.current && !navRef.current.contains(e.target)) setOpenMenu(null);
+    }
+    function handleKey(e) {
+      if (e.key === "Escape") setOpenMenu(null);
+    }
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [openMenu]);
 
   function loadNews() {
     setNewsLoading(true);
@@ -601,6 +1002,21 @@ export default function ForeSecure() {
         .sl-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
         .sl-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .sl-split-view { display: grid; grid-template-columns: 1fr 1fr; }
+        .sl-dropdown-panel {
+          box-shadow: 0 20px 45px -18px rgba(20,23,28,0.28);
+          padding: 10px; min-width: 300px; max-width: 340px; z-index: 60;
+        }
+        .sl-dropdown-panel--flyout { position: absolute; top: 0; left: 100%; margin-left: 8px; }
+        .sl-dropdown-link {
+          display: flex; align-items: center; justify-content: space-between; gap: 10px;
+          padding: 10px 12px; border-radius: 6px; font-size: 13.5px; color: ${COLORS.black};
+          text-decoration: none; line-height: 1.4;
+        }
+        .sl-dropdown-link:hover { background: ${COLORS.goldLight}; }
+        .sl-mobile-details summary { cursor: pointer; padding: 10px 0; list-style: none; }
+        .sl-mobile-details summary::-webkit-details-marker { display: none; }
+        .sl-mobile-details summary::after { content: "+"; float: right; color: ${COLORS.slateLight}; }
+        .sl-mobile-details[open] summary::after { content: "–"; }
         @media (max-width: 900px) {
           .sl-split-view { grid-template-columns: 1fr; }
         }
@@ -622,7 +1038,7 @@ export default function ForeSecure() {
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
             <button
-              onClick={() => { setPage("home"); setSelectedAlert(null); }}
+              onClick={() => { setPage("home"); setSelectedAlert(null); setSelectedService(null); }}
               style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", textAlign: "left" }}
               aria-label="ForeSecure home"
             >
@@ -640,7 +1056,7 @@ export default function ForeSecure() {
               </div>
             </button>
             <button
-              onClick={() => { setPage("alerts"); setSelectedAlert(null); }}
+              onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }}
               style={{
                 display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "inherit",
                 background: page === "alerts" ? COLORS.black : "#fff",
@@ -656,8 +1072,16 @@ export default function ForeSecure() {
               Live Alerts
             </button>
           </div>
-          <nav className="sl-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 32 }}>
-            {NAV_LINKS.map((l) => <a key={l} href="#" className="sl-nav-link">{l}</a>)}
+          <nav ref={navRef} className="sl-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 28 }}>
+            {NAV_MENU.map((item) => (
+              <NavMenuItem
+                key={item.label}
+                item={item}
+                isOpen={openMenu === item.label}
+                onToggle={() => setOpenMenu((m) => (m === item.label ? null : item.label))}
+                onNavigate={handleNavigate}
+              />
+            ))}
           </nav>
           <div className="sl-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <a href="#" className="sl-nav-link">Sign in</a>
@@ -688,9 +1112,9 @@ export default function ForeSecure() {
           </div>
         </div>
         {menuOpen && (
-          <div style={{ padding: "8px 24px 20px", display: "flex", flexDirection: "column", gap: 14, borderTop: `1px solid ${COLORS.line}` }}>
-            {NAV_LINKS.map((l) => <a key={l} href="#" className="sl-nav-link">{l}</a>)}
-            <button className="sl-btn-primary" style={{ justifyContent: "center", marginTop: 6 }}>Request briefing <ArrowRight size={15} /></button>
+          <div style={{ padding: "8px 24px 20px", display: "flex", flexDirection: "column", gap: 6, borderTop: `1px solid ${COLORS.line}` }}>
+            <MobileNavAccordion menu={NAV_MENU} onNavigate={handleNavigate} />
+            <button className="sl-btn-primary" style={{ justifyContent: "center", marginTop: 10 }}>Request briefing <ArrowRight size={15} /></button>
           </div>
         )}
       </header>
@@ -986,7 +1410,7 @@ export default function ForeSecure() {
                   : "Loading the latest briefings…"}
               </p>
             </div>
-            <button onClick={() => { setPage("alerts"); setSelectedAlert(null); }} className="sl-btn-primary" style={{ flexShrink: 0 }}>
+            <button onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }} className="sl-btn-primary" style={{ flexShrink: 0 }}>
               View Live Alerts <ArrowUpRight size={16} />
             </button>
           </div>
@@ -1159,6 +1583,61 @@ export default function ForeSecure() {
               </div>
             </div>
           )}
+        </section>
+      )}
+
+      {/* SERVICE / INSIGHTS DETAIL PAGE — shown when a nav dropdown leaf item is clicked */}
+      {page === "service" && selectedService && SERVICE_CONTENT[selectedService] && (
+        <section style={{ maxWidth: 860, margin: "0 auto", padding: "40px 24px 100px" }}>
+          <button
+            onClick={() => { setPage("home"); setSelectedService(null); }}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", color: COLORS.slate, fontSize: 14, fontWeight: 600, padding: 0, marginBottom: 28, font: "inherit" }}
+          >
+            <ArrowRight size={16} style={{ transform: "rotate(180deg)" }} /> Back
+          </button>
+
+          <Reveal>
+            <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              {SERVICE_CONTENT[selectedService].category}
+            </div>
+            <h1 className="sl-display" style={{ fontSize: "clamp(28px, 3.6vw, 40px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>
+              {selectedService}
+            </h1>
+            <p style={{ fontSize: 17, color: COLORS.slate, marginTop: 16, lineHeight: 1.55, maxWidth: 640 }}>
+              {SERVICE_CONTENT[selectedService].summary}
+            </p>
+          </Reveal>
+
+          {/* Image placeholder — left empty intentionally, drop real photography in later */}
+          <Reveal delay={80}>
+            <div
+              style={{
+                marginTop: 32, height: 280, borderRadius: 12, border: `1.5px dashed ${COLORS.line}`,
+                background: COLORS.white, display: "flex", flexDirection: "column", alignItems: "center",
+                justifyContent: "center", gap: 8, color: COLORS.slateLight,
+              }}
+            >
+              <ImageIcon size={28} color={COLORS.slateLight} />
+              <span className="sl-mono" style={{ fontSize: 11.5, letterSpacing: "0.04em", textTransform: "uppercase" }}>Image placeholder</span>
+            </div>
+          </Reveal>
+
+          <Reveal delay={140}>
+            <div style={{ marginTop: 36, display: "flex", flexDirection: "column", gap: 18 }}>
+              {SERVICE_CONTENT[selectedService].body.map((para, i) => (
+                <p key={i} style={{ fontSize: 15.5, color: COLORS.slate, lineHeight: 1.75 }}>{para}</p>
+              ))}
+            </div>
+          </Reveal>
+
+          <Reveal delay={180}>
+            <div style={{ marginTop: 40, display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <button className="sl-btn-primary">Request briefing <ArrowRight size={15} /></button>
+              <button onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }} className="sl-btn-ghost">
+                View Live Alerts
+              </button>
+            </div>
+          </Reveal>
         </section>
       )}
 
