@@ -3,7 +3,7 @@ import {
   Plane, CloudLightning, ShieldAlert, HeartPulse, ArrowRight,
   MapPin, Clock, CheckCircle2, Menu, X, Mail, Bell, Activity,
   Globe2, Radio, Lock, Building2, Newspaper, ArrowUpRight,
-  MoreHorizontal, ChevronRight, ChevronDown
+  MoreHorizontal, ChevronRight, ChevronDown, RefreshCw
 } from "lucide-react";
 
 const FONT_IMPORT_URL =
@@ -34,6 +34,13 @@ const tickerFeed = [
 
 const levelColor = (lvl) =>
   lvl === "WARNING" ? COLORS.red : lvl === "WATCH" ? COLORS.gold : "#5C6470";
+
+// Maps the /api/news categorizer's tag to a ticker severity level.
+const tagToLevel = (tag) => {
+  if (tag === "Security" || tag === "Weather") return "WARNING";
+  if (tag === "Travel") return "WATCH";
+  return "ADVISORY";
+};
 
 const trustedByStats = [
   { fig: "8/10", label: "top logistics networks operate on ForeSecure" },
@@ -402,6 +409,75 @@ export default function ForeSecure() {
   const [subscribed, setSubscribed] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
   const [captionIndex, setCaptionIndex] = useState(-1);
+  const [liveArticles, setLiveArticles] = useState(null);
+  const [regionNews, setRegionNews] = useState(null);
+  const [newsError, setNewsError] = useState(null);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [newsUpdatedAt, setNewsUpdatedAt] = useState(null);
+
+  function loadNews() {
+    setNewsLoading(true);
+    setNewsError(null);
+    fetch("/api/news")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) {
+          setNewsError(data.error);
+        } else {
+          setLiveArticles(data.all || []);
+          setRegionNews(data.regions || null);
+          setNewsUpdatedAt(data.updatedAt || new Date().toISOString());
+        }
+      })
+      .catch(() => {
+        setNewsError("Could not load live news.");
+      })
+      .finally(() => setNewsLoading(false));
+  }
+
+  // Load once on mount, then keep the feed genuinely "live" by refreshing
+  // in the background every 3 minutes without any user action required.
+  useEffect(() => {
+    loadNews();
+    const id = setInterval(loadNews, 3 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const REGION_ORDER = ["APAC", "EMEA", "NORTH_AMERICA", "LATIN_AMERICA"];
+  const REGION_LABELS = {
+    APAC: "APAC",
+    EMEA: "EMEA",
+    NORTH_AMERICA: "North America",
+    LATIN_AMERICA: "Latin America",
+  };
+
+  function timeAgo(iso) {
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+  }
+
+  // Feed the scrolling ticker from live /api/news results once they've loaded;
+  // fall back to the placeholder feed while loading or if the request failed.
+  const tickerData =
+    liveArticles && liveArticles.length > 0
+      ? liveArticles.map((a) => ({
+          level: tagToLevel(a.tag),
+          loc: a.source,
+          type: a.title,
+          timeLabel: a.publishedAt ? timeAgo(a.publishedAt) : "",
+          url: a.url,
+        }))
+      : tickerFeed.map((item) => ({
+          level: item.level,
+          loc: item.loc,
+          type: item.type,
+          timeLabel: `${item.t} ago`,
+          url: null,
+        }));
 
   return (
     <div style={{ background: COLORS.bg, color: COLORS.black, fontFamily: "'Inter', sans-serif", minHeight: "100vh" }}>
@@ -424,6 +500,7 @@ export default function ForeSecure() {
         .sl-card { background: #fff; border: 1px solid ${COLORS.line}; border-radius: 10px; }
         .sl-ticker-track { display: flex; width: max-content; animation: sl-scroll 32s linear infinite; }
         @keyframes sl-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @keyframes sl-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .sl-nav-link { color: ${COLORS.slate}; text-decoration: none; font-size: 14.5px; font-weight: 500; }
         .sl-nav-link:hover { color: ${COLORS.black}; }
         .sl-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -512,20 +589,31 @@ export default function ForeSecure() {
         </div>
       </section>
 
-      {/* TICKER — signature element */}
+      {/* TICKER — signature element, driven by live /api/news when available */}
       <section style={{ background: COLORS.black, padding: "16px 0", overflow: "hidden", borderTop: "1px solid #24272E" }}>
         <div className="sl-ticker-track">
-          {[...tickerFeed, ...tickerFeed].map((item, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 28px", borderRight: "1px solid #2A2E36", whiteSpace: "nowrap" }}>
-              <span className="sl-mono" style={{ fontSize: 11, fontWeight: 600, color: item.level === "WARNING" ? "#F0A8A8" : item.level === "WATCH" ? "#EBCE8A" : "#B9BCC2", background: "rgba(255,255,255,0.06)", padding: "3px 8px", borderRadius: 3 }}>
-                {item.level}
-              </span>
-              <MapPin size={13} color="#7A7E86" />
-              <span className="sl-mono" style={{ fontSize: 13, color: "#DAD8D0" }}>{item.loc}</span>
-              <span style={{ fontSize: 13, color: "#9A9DA3" }}>{item.type}</span>
-              <span className="sl-mono" style={{ fontSize: 11.5, color: "#63666D" }}>{item.t} ago</span>
-            </div>
-          ))}
+          {[...tickerData, ...tickerData].map((item, i) => {
+            const Tag = item.url ? "a" : "div";
+            return (
+              <Tag
+                key={i}
+                {...(item.url ? { href: item.url, target: "_blank", rel: "noreferrer" } : {})}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "0 28px",
+                  borderRight: "1px solid #2A2E36", whiteSpace: "nowrap",
+                  textDecoration: "none", cursor: item.url ? "pointer" : "default",
+                }}
+              >
+                <span className="sl-mono" style={{ fontSize: 11, fontWeight: 600, color: item.level === "WARNING" ? "#F0A8A8" : item.level === "WATCH" ? "#EBCE8A" : "#B9BCC2", background: "rgba(255,255,255,0.06)", padding: "3px 8px", borderRadius: 3 }}>
+                  {item.level}
+                </span>
+                <MapPin size={13} color="#7A7E86" />
+                <span className="sl-mono" style={{ fontSize: 13, color: "#DAD8D0" }}>{item.loc}</span>
+                <span style={{ fontSize: 13, color: "#9A9DA3", maxWidth: 420, overflow: "hidden", textOverflow: "ellipsis" }}>{item.type}</span>
+                <span className="sl-mono" style={{ fontSize: 11.5, color: "#63666D" }}>{item.timeLabel}</span>
+              </Tag>
+            );
+          })}
         </div>
       </section>
 
@@ -541,6 +629,65 @@ export default function ForeSecure() {
             ))}
           </div>
         </Reveal>
+      </section>
+
+      {/* REGIONAL WATCH — live RSS feed split into four boxes side by side */}
+      <section style={{ maxWidth: 1160, margin: "0 auto", padding: "96px 24px 0" }}>
+        <Reveal>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+            <div>
+              <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>Regional watch</div>
+              <h2 className="sl-display" style={{ fontSize: "clamp(26px, 3vw, 34px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>
+                Live coverage, by region.
+              </h2>
+            </div>
+            <div className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: newsLoading ? COLORS.gold : "#3FA65B", flexShrink: 0 }} />
+              {newsLoading ? "Refreshing…" : newsUpdatedAt ? `Updated ${timeAgo(newsUpdatedAt)}` : "Live"}
+            </div>
+          </div>
+        </Reveal>
+        <div className="sl-grid-4" style={{ marginTop: 32, alignItems: "stretch" }}>
+          {REGION_ORDER.map((key, i) => {
+            const items = (regionNews && regionNews[key]) || [];
+            return (
+              <Reveal key={key} delay={i * 90}>
+                <div className="sl-card" style={{ padding: 20, height: "100%", display: "flex", flexDirection: "column" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 12, borderBottom: `1px solid ${COLORS.line}` }}>
+                    <span className="sl-display" style={{ fontWeight: 700, fontSize: 15 }}>{REGION_LABELS[key]}</span>
+                    <Globe2 size={15} color={COLORS.slateLight} />
+                  </div>
+                  <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 4, maxHeight: 340, overflowY: "auto", paddingRight: 4 }}>
+                    {items.length > 0 ? (
+                      items.map((item) => (
+                        <a
+                          key={item.url}
+                          href={item.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ display: "block", padding: "10px 0", borderBottom: `1px solid ${COLORS.line}`, textDecoration: "none", color: "inherit" }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span className="sl-mono" style={{ fontSize: 10, color: COLORS.red, background: COLORS.goldLight, padding: "2px 7px", borderRadius: 3, fontWeight: 600 }}>{item.tag}</span>
+                            <span className="sl-mono" style={{ fontSize: 10.5, color: COLORS.slateLight }}>
+                              {item.publishedAt ? timeAgo(item.publishedAt) : ""}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 13.5, fontWeight: 500, marginTop: 6, lineHeight: 1.4 }}>{item.title}</div>
+                          <div style={{ fontSize: 11.5, color: COLORS.slateLight, marginTop: 4 }}>{item.source}</div>
+                        </a>
+                      ))
+                    ) : (
+                      <div style={{ fontSize: 13, color: COLORS.slateLight, padding: "16px 0" }}>
+                        {newsLoading ? "Loading live coverage…" : "No active reports right now."}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
       </section>
 
       {/* SOLUTIONS GRID */}
@@ -695,27 +842,48 @@ export default function ForeSecure() {
               <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>Intelligence desk</div>
               <h2 className="sl-display" style={{ fontSize: "clamp(26px, 3vw, 34px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>Latest briefings</h2>
             </div>
-            <a href="#" className="sl-nav-link" style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
-              View all briefings <ArrowUpRight size={15} />
-            </a>
+            <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+              <button
+                onClick={loadNews}
+                disabled={newsLoading}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6, background: "none", border: "none",
+                  color: COLORS.red, fontWeight: 600, fontSize: 14, cursor: newsLoading ? "default" : "pointer",
+                  opacity: newsLoading ? 0.6 : 1,
+                }}
+              >
+                <RefreshCw size={15} style={{ animation: newsLoading ? "sl-spin 1s linear infinite" : "none" }} />
+                {newsLoading ? "Refreshing…" : "Refresh"}
+              </button>
+              <a href="#" className="sl-nav-link" style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
+                View all briefings <ArrowUpRight size={15} />
+              </a>
+            </div>
           </div>
         </Reveal>
         <div className="sl-grid-4" style={{ marginTop: 32, gridTemplateColumns: "repeat(3, 1fr)" }}>
-          {insightsArticles.map(({ tag, date, title, read }, i) => (
-            <Reveal key={title} delay={i * 90}>
-              <a href="#" className="sl-card" style={{ display: "block", padding: 22, height: "100%", textDecoration: "none", color: "inherit" }}>
+          {(liveArticles && liveArticles.length > 0 ? liveArticles.slice(0, 9) : insightsArticles).map((item, i) => (
+            <Reveal key={item.url || item.title} delay={i * 90}>
+              <a href={item.url || "#"} target={item.url ? "_blank" : undefined} rel="noreferrer" className="sl-card" style={{ display: "block", padding: 22, height: "100%", textDecoration: "none", color: "inherit" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span className="sl-mono" style={{ fontSize: 11, color: COLORS.red, background: COLORS.goldLight, padding: "3px 9px", borderRadius: 3, fontWeight: 600 }}>{tag}</span>
-                  <span className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight }}>{date}</span>
+                  <span className="sl-mono" style={{ fontSize: 11, color: COLORS.red, background: COLORS.goldLight, padding: "3px 9px", borderRadius: 3, fontWeight: 600 }}>{item.tag}</span>
+                  <span className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight }}>
+                    {item.publishedAt ? timeAgo(item.publishedAt) : item.date}
+                  </span>
                 </div>
-                <h3 className="sl-display" style={{ fontSize: 16.5, fontWeight: 600, marginTop: 14, lineHeight: 1.4 }}>{title}</h3>
+                <h3 className="sl-display" style={{ fontSize: 16.5, fontWeight: 600, marginTop: 14, lineHeight: 1.4 }}>{item.title}</h3>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 12.5, color: COLORS.slateLight }}>
-                  <Newspaper size={14} />{read}
+                  <Newspaper size={14} />{item.source || item.read}
                 </div>
               </a>
             </Reveal>
           ))}
         </div>
+        {newsError && (
+          <p style={{ fontSize: 12.5, color: COLORS.slateLight, marginTop: 16 }}>
+            Live feed unavailable right now — showing sample briefings instead.
+          </p>
+        )}
       </section>
 
       {/* NEWSLETTER */}
