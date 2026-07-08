@@ -1334,27 +1334,7 @@ export default function ForeSecure() {
 
       {page === "home" && (
       <>
-      {/* Straight to Live Alerts — no duplicate summary here, just the door to it */}
-      <section style={{ maxWidth: 1160, margin: "0 auto", padding: "56px 24px 0" }}>
-        <Reveal>
-          <div className="sl-card" style={{ padding: "40px 36px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
-            <div>
-              <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>Intelligence desk</div>
-              <h2 className="sl-display" style={{ fontSize: "clamp(24px, 3vw, 30px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>
-                Live, high and medium-risk alerts — updated continuously.
-              </h2>
-              <p style={{ fontSize: 14.5, color: COLORS.slate, marginTop: 10, maxWidth: 520 }}>
-                {liveArticles && liveArticles.length > 0
-                  ? `${liveArticles.length} active briefings across APAC, EMEA, North America and Latin America.`
-                  : "Loading the latest briefings…"}
-              </p>
-            </div>
-            <button onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }} className="sl-btn-primary" style={{ flexShrink: 0 }}>
-              View Live Alerts <ArrowUpRight size={16} />
-            </button>
-          </div>
-        </Reveal>
-      </section>
+     
 
       {/* SOLUTIONS GRID */}
       <section style={{ maxWidth: 1160, margin: "0 auto", padding: "96px 24px 0" }}>
