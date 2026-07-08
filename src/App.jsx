@@ -393,12 +393,26 @@ function ForeSecureMark({ size = 30 }) {
   );
 }
 
-// Logo lockup: mark + wordmark PNGs both have transparent backgrounds and
-// are black/gold, so they read fine directly on the site's light
-// header/footer — no dark chip needed. `height` here is the wordmark's
-// height; the mark is taller than the wordmark's own cap-height in the
-// source art, so it's scaled up relative to it to look correctly sized
-// next to the text, not tiny.
+// Logo lockup: mark PNG has a transparent background, so it reads fine
+// directly on the site's light header/footer — no dark chip needed.
+// The wordmark itself is now rendered as real text (matching the
+// FORE/SECURE brand reference) rather than an image, so it stays crisp at
+// any size. `height` drives both the mark size and the text size.
+function WordmarkText({ size = 34 }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ display: "flex", gap: "0.22em" }}>
+        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: size, color: COLORS.black, lineHeight: 1 }}>FORE</span>
+        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: size, color: COLORS.gold, lineHeight: 1 }}>SECURE</span>
+      </div>
+      <div style={{ fontSize: size * 0.22, color: COLORS.slate, letterSpacing: "0.1em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8 }}>
+        <span>SECURITY ADVISORY</span><span>|</span><span>RISK INSIGHTS</span><span>|</span><span>STRATEGIC SECURITY</span>
+      </div>
+      <img src="/images/brand/underline.png" alt="" style={{ width: "100%", height: "auto", display: "block", marginTop: 2 }} />
+    </div>
+  );
+}
+
 function BrandLogo({ height = 34 }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: Math.round(height * 0.3) }}>
@@ -407,13 +421,10 @@ function BrandLogo({ height = 34 }) {
         alt=""
         style={{ height: Math.round(height * 1.9), width: "auto", display: "block" }}
       />
-      <img
-        src="/images/brand/wordmark.png"
-        alt="ForeSecure"
-        style={{ height, width: "auto", display: "block" }}
-      />
+      <WordmarkText size={height} />
     </div>
   );
+
 }
 
 // ---- Desktop mega-menu (click to open). Renders every group as a column
