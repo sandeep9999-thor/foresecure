@@ -10,12 +10,15 @@
 // Your map/location feature (PLACES + findLocation) is preserved exactly
 // as you had it — only the fetching layer underneath changed.
 //
+// Regions: APAC, India (split out separately from APAC for its own feed),
+// EMEA, and Americas (North + Latin America combined into one region).
+//
 // To keep boxes from running dry: risk-filtered RSS naturally yields fewer
 // matches than an unfiltered feed, so we now pull from well over a dozen
-// trusted outlets across all four regions. Latin America specifically was
-// coming up empty because its coverage is mostly published in Spanish and
-// Portuguese — the keyword filter below now matches both languages, and
-// BBC Mundo (Spanish) and G1 (Brazilian Portuguese) were added as sources.
+// trusted outlets across all four regions. Latin America coverage specifically
+// needed Spanish/Portuguese keyword matching — most of it isn't published in
+// English — so the risk filter below matches both languages, and BBC Mundo
+// (Spanish) and G1 (Brazilian Portuguese) were added as sources.
 
 function categorize(text = "") {
   const t = text.toLowerCase();
@@ -61,9 +64,6 @@ const PLACES = [
   { name: "Thailand", region: "APAC", lat: 15.8700, lng: 100.9925 },
   { name: "Seoul", region: "APAC", lat: 37.5665, lng: 126.9780 },
   { name: "South Korea", region: "APAC", lat: 35.9078, lng: 127.7669 },
-  { name: "Mumbai", region: "APAC", lat: 19.0760, lng: 72.8777 },
-  { name: "New Delhi", region: "APAC", lat: 28.6139, lng: 77.2090 },
-  { name: "India", region: "APAC", lat: 20.5937, lng: 78.9629 },
   { name: "Sydney", region: "APAC", lat: -33.8688, lng: 151.2093 },
   { name: "Australia", region: "APAC", lat: -25.2744, lng: 133.7751 },
   { name: "Kuala Lumpur", region: "APAC", lat: 3.1390, lng: 101.6869 },
@@ -75,6 +75,23 @@ const PLACES = [
   { name: "Pakistan", region: "APAC", lat: 30.3753, lng: 69.3451 },
   { name: "Bangladesh", region: "APAC", lat: 23.6850, lng: 90.3563 },
   { name: "Myanmar", region: "APAC", lat: 21.9162, lng: 95.9560 },
+
+  { name: "Mumbai", region: "INDIA", lat: 19.0760, lng: 72.8777 },
+  { name: "New Delhi", region: "INDIA", lat: 28.6139, lng: 77.2090 },
+  { name: "Delhi", region: "INDIA", lat: 28.7041, lng: 77.1025 },
+  { name: "Bengaluru", region: "INDIA", lat: 12.9716, lng: 77.5946 },
+  { name: "Bangalore", region: "INDIA", lat: 12.9716, lng: 77.5946 },
+  { name: "Chennai", region: "INDIA", lat: 13.0827, lng: 80.2707 },
+  { name: "Kolkata", region: "INDIA", lat: 22.5726, lng: 88.3639 },
+  { name: "Hyderabad", region: "INDIA", lat: 17.3850, lng: 78.4867 },
+  { name: "Pune", region: "INDIA", lat: 18.5204, lng: 73.8567 },
+  { name: "Ahmedabad", region: "INDIA", lat: 23.0225, lng: 72.5714 },
+  { name: "Jaipur", region: "INDIA", lat: 26.9124, lng: 75.7873 },
+  { name: "Lucknow", region: "INDIA", lat: 26.8467, lng: 80.9462 },
+  { name: "Kashmir", region: "INDIA", lat: 34.0837, lng: 74.7973 },
+  { name: "Gujarat", region: "INDIA", lat: 22.2587, lng: 71.1924 },
+  { name: "Maharashtra", region: "INDIA", lat: 19.7515, lng: 75.7139 },
+  { name: "India", region: "INDIA", lat: 20.5937, lng: 78.9629 },
 
   { name: "London", region: "EMEA", lat: 51.5072, lng: -0.1276 },
   { name: "United Kingdom", region: "EMEA", lat: 55.3781, lng: -3.4360 },
@@ -114,35 +131,35 @@ const PLACES = [
   { name: "Syria", region: "EMEA", lat: 34.8021, lng: 38.9968 },
   { name: "Sudan", region: "EMEA", lat: 12.8628, lng: 30.2176 },
 
-  { name: "New York", region: "NORTH_AMERICA", lat: 40.7128, lng: -74.0060 },
-  { name: "Washington", region: "NORTH_AMERICA", lat: 38.9072, lng: -77.0369 },
-  { name: "Los Angeles", region: "NORTH_AMERICA", lat: 34.0522, lng: -118.2437 },
-  { name: "Chicago", region: "NORTH_AMERICA", lat: 41.8781, lng: -87.6298 },
-  { name: "Houston", region: "NORTH_AMERICA", lat: 29.7604, lng: -95.3698 },
-  { name: "Miami", region: "NORTH_AMERICA", lat: 25.7617, lng: -80.1918 },
-  { name: "San Francisco", region: "NORTH_AMERICA", lat: 37.7749, lng: -122.4194 },
-  { name: "United States", region: "NORTH_AMERICA", lat: 37.0902, lng: -95.7129 },
-  { name: "Toronto", region: "NORTH_AMERICA", lat: 43.6532, lng: -79.3832 },
-  { name: "Vancouver", region: "NORTH_AMERICA", lat: 49.2827, lng: -123.1207 },
-  { name: "Canada", region: "NORTH_AMERICA", lat: 56.1304, lng: -106.3468 },
-  { name: "Mexico City", region: "NORTH_AMERICA", lat: 19.4326, lng: -99.1332 },
-  { name: "Mexico", region: "NORTH_AMERICA", lat: 23.6345, lng: -102.5528 },
+  { name: "New York", region: "AMERICAS", lat: 40.7128, lng: -74.0060 },
+  { name: "Washington", region: "AMERICAS", lat: 38.9072, lng: -77.0369 },
+  { name: "Los Angeles", region: "AMERICAS", lat: 34.0522, lng: -118.2437 },
+  { name: "Chicago", region: "AMERICAS", lat: 41.8781, lng: -87.6298 },
+  { name: "Houston", region: "AMERICAS", lat: 29.7604, lng: -95.3698 },
+  { name: "Miami", region: "AMERICAS", lat: 25.7617, lng: -80.1918 },
+  { name: "San Francisco", region: "AMERICAS", lat: 37.7749, lng: -122.4194 },
+  { name: "United States", region: "AMERICAS", lat: 37.0902, lng: -95.7129 },
+  { name: "Toronto", region: "AMERICAS", lat: 43.6532, lng: -79.3832 },
+  { name: "Vancouver", region: "AMERICAS", lat: 49.2827, lng: -123.1207 },
+  { name: "Canada", region: "AMERICAS", lat: 56.1304, lng: -106.3468 },
+  { name: "Mexico City", region: "AMERICAS", lat: 19.4326, lng: -99.1332 },
+  { name: "Mexico", region: "AMERICAS", lat: 23.6345, lng: -102.5528 },
 
-  { name: "São Paulo", region: "LATIN_AMERICA", lat: -23.5505, lng: -46.6333 },
-  { name: "Rio de Janeiro", region: "LATIN_AMERICA", lat: -22.9068, lng: -43.1729 },
-  { name: "Brazil", region: "LATIN_AMERICA", lat: -14.2350, lng: -51.9253 },
-  { name: "Buenos Aires", region: "LATIN_AMERICA", lat: -34.6037, lng: -58.3816 },
-  { name: "Argentina", region: "LATIN_AMERICA", lat: -38.4161, lng: -63.6167 },
-  { name: "Bogotá", region: "LATIN_AMERICA", lat: 4.7110, lng: -74.0721 },
-  { name: "Colombia", region: "LATIN_AMERICA", lat: 4.5709, lng: -74.2973 },
-  { name: "Lima", region: "LATIN_AMERICA", lat: -12.0464, lng: -77.0428 },
-  { name: "Peru", region: "LATIN_AMERICA", lat: -9.1900, lng: -75.0152 },
-  { name: "Santiago", region: "LATIN_AMERICA", lat: -33.4489, lng: -70.6693 },
-  { name: "Chile", region: "LATIN_AMERICA", lat: -35.6751, lng: -71.5430 },
-  { name: "Caracas", region: "LATIN_AMERICA", lat: 10.4806, lng: -66.9036 },
-  { name: "Venezuela", region: "LATIN_AMERICA", lat: 6.4238, lng: -66.5897 },
-  { name: "Quito", region: "LATIN_AMERICA", lat: -0.1807, lng: -78.4678 },
-  { name: "Ecuador", region: "LATIN_AMERICA", lat: -1.8312, lng: -78.1834 },
+  { name: "São Paulo", region: "AMERICAS", lat: -23.5505, lng: -46.6333 },
+  { name: "Rio de Janeiro", region: "AMERICAS", lat: -22.9068, lng: -43.1729 },
+  { name: "Brazil", region: "AMERICAS", lat: -14.2350, lng: -51.9253 },
+  { name: "Buenos Aires", region: "AMERICAS", lat: -34.6037, lng: -58.3816 },
+  { name: "Argentina", region: "AMERICAS", lat: -38.4161, lng: -63.6167 },
+  { name: "Bogotá", region: "AMERICAS", lat: 4.7110, lng: -74.0721 },
+  { name: "Colombia", region: "AMERICAS", lat: 4.5709, lng: -74.2973 },
+  { name: "Lima", region: "AMERICAS", lat: -12.0464, lng: -77.0428 },
+  { name: "Peru", region: "AMERICAS", lat: -9.1900, lng: -75.0152 },
+  { name: "Santiago", region: "AMERICAS", lat: -33.4489, lng: -70.6693 },
+  { name: "Chile", region: "AMERICAS", lat: -35.6751, lng: -71.5430 },
+  { name: "Caracas", region: "AMERICAS", lat: 10.4806, lng: -66.9036 },
+  { name: "Venezuela", region: "AMERICAS", lat: 6.4238, lng: -66.5897 },
+  { name: "Quito", region: "AMERICAS", lat: -0.1807, lng: -78.4678 },
+  { name: "Ecuador", region: "AMERICAS", lat: -1.8312, lng: -78.1834 },
 ];
 
 const SORTED_PLACES = [...PLACES].sort((a, b) => b.name.length - a.name.length);
@@ -158,12 +175,12 @@ function findLocation(text = "") {
   return null;
 }
 
-const REGION_KEYS = ["APAC", "EMEA", "NORTH_AMERICA", "LATIN_AMERICA"];
+const REGION_KEYS = ["APAC", "INDIA", "EMEA", "AMERICAS"];
 const REGION_LABELS = {
   APAC: "APAC",
+  INDIA: "India",
   EMEA: "EMEA",
-  NORTH_AMERICA: "North America",
-  LATIN_AMERICA: "Latin America",
+  AMERICAS: "Americas",
 };
 
 // ---- feeds ----
@@ -178,6 +195,12 @@ const DIRECT_REGION_FEEDS = {
     "https://www.theguardian.com/world/asia/rss",
     "https://www.channelnewsasia.com/rssfeeds/8395986",
   ],
+  INDIA: [
+    "https://www.theguardian.com/world/india/rss",
+    "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
+    "https://feeds.feedburner.com/ndtvnews-top-stories",
+    "https://www.thehindu.com/news/national/feeder/default.rss",
+  ],
   EMEA: [
     "https://feeds.bbci.co.uk/news/world/europe/rss.xml",
     "https://feeds.bbci.co.uk/news/world/africa/rss.xml",
@@ -186,15 +209,13 @@ const DIRECT_REGION_FEEDS = {
     "https://www.theguardian.com/world/africa/rss",
     "https://www.theguardian.com/world/europe-news/rss",
   ],
-  NORTH_AMERICA: [
+  AMERICAS: [
     "https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml",
     "https://www.theguardian.com/us-news/rss",
     "http://rss.cnn.com/rss/cnn_us.rss",
     "https://abcnews.go.com/abcnews/usheadlines",
     "https://rssfeeds.usatoday.com/usatoday-NewsTopStories",
     "https://www.cbsnews.com/latest/rss/main",
-  ],
-  LATIN_AMERICA: [
     "https://feeds.bbci.co.uk/news/world/latin_america/rss.xml",
     "https://www.theguardian.com/world/americas/rss",
     "https://feeds.bbci.co.uk/mundo/rss.xml",

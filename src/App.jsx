@@ -4,7 +4,7 @@ import {
   MapPin, Clock, CheckCircle2, Menu, X, Mail, Bell, Activity,
   Globe2, Radio, Lock, Building2, Newspaper, ArrowUpRight,
   MoreHorizontal, ChevronRight, ChevronDown, RefreshCw, MapPinned, ExternalLink,
-  Image as ImageIcon
+  Image as ImageIcon, Flag
 } from "lucide-react";
 
 const FONT_IMPORT_URL =
@@ -915,12 +915,18 @@ export default function ForeSecure() {
     return () => clearInterval(id);
   }, []);
 
-  const REGION_ORDER = ["APAC", "EMEA", "NORTH_AMERICA", "LATIN_AMERICA"];
+  const REGION_ORDER = ["APAC", "INDIA", "EMEA", "AMERICAS"];
   const REGION_LABELS = {
     APAC: "APAC",
+    INDIA: "India",
     EMEA: "EMEA",
-    NORTH_AMERICA: "North America",
-    LATIN_AMERICA: "Latin America",
+    AMERICAS: "Americas",
+  };
+  const REGION_ICONS = {
+    APAC: Globe2,
+    INDIA: Flag,
+    EMEA: Globe2,
+    AMERICAS: Globe2,
   };
 
   function timeAgo(iso) {
@@ -1210,12 +1216,13 @@ export default function ForeSecure() {
         <div className="sl-grid-4" style={{ marginTop: 32, alignItems: "stretch" }}>
           {REGION_ORDER.map((key, i) => {
             const items = (regionNews && regionNews[key]) || [];
+            const RegionIcon = REGION_ICONS[key] || Globe2;
             return (
               <Reveal key={key} delay={i * 90}>
                 <div className="sl-card" style={{ padding: 20, height: "100%", display: "flex", flexDirection: "column" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 12, borderBottom: `1px solid ${COLORS.line}` }}>
                     <span className="sl-display" style={{ fontWeight: 700, fontSize: 15 }}>{REGION_LABELS[key]}</span>
-                    <Globe2 size={15} color={COLORS.slateLight} />
+                    <RegionIcon size={15} color={COLORS.slateLight} />
                   </div>
                   <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 4, maxHeight: 340, overflowY: "auto", paddingRight: 4 }}>
                     {items.length > 0 ? (
@@ -1406,7 +1413,7 @@ export default function ForeSecure() {
               </h2>
               <p style={{ fontSize: 14.5, color: COLORS.slate, marginTop: 10, maxWidth: 520 }}>
                 {liveArticles && liveArticles.length > 0
-                  ? `${liveArticles.length} active briefings across APAC, EMEA, North America and Latin America.`
+                  ? `${liveArticles.length} active briefings across APAC, India, EMEA and the Americas.`
                   : "Loading the latest briefings…"}
               </p>
             </div>
@@ -1455,20 +1462,25 @@ export default function ForeSecure() {
               </Reveal>
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 28 }}>
-                {["ALL", ...REGION_ORDER].map((key) => (
-                  <button
-                    key={key}
-                    onClick={() => setAlertRegionFilter(key)}
-                    style={{
-                      background: alertRegionFilter === key ? COLORS.black : "#fff",
-                      color: alertRegionFilter === key ? "#fff" : COLORS.slate,
-                      border: `1.5px solid ${alertRegionFilter === key ? COLORS.black : COLORS.line}`,
-                      borderRadius: 20, padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
-                    }}
-                  >
-                    {key === "ALL" ? "All regions" : REGION_LABELS[key]}
-                  </button>
-                ))}
+                {["ALL", ...REGION_ORDER].map((key) => {
+                  const TabIcon = key === "ALL" ? null : (REGION_ICONS[key] || Globe2);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setAlertRegionFilter(key)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 6,
+                        background: alertRegionFilter === key ? COLORS.black : "#fff",
+                        color: alertRegionFilter === key ? "#fff" : COLORS.slate,
+                        border: `1.5px solid ${alertRegionFilter === key ? COLORS.black : COLORS.line}`,
+                        borderRadius: 20, padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                      }}
+                    >
+                      {TabIcon && <TabIcon size={13} />}
+                      {key === "ALL" ? "All regions" : REGION_LABELS[key]}
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="sl-grid-4" style={{ marginTop: 28, gridTemplateColumns: "repeat(3, 1fr)" }}>
