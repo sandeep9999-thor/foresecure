@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Plane, CloudLightning, ShieldAlert, HeartPulse, ArrowRight,
   MapPin, Clock, CheckCircle2, Menu, X, Mail, Bell, Activity,
-  Globe2, Radio, Lock, Building2, Newspaper, ArrowUpRight,
+  Globe2, Lock, Building2, Newspaper, ArrowUpRight,
   MoreHorizontal, ChevronRight, ChevronDown, RefreshCw, MapPinned, ExternalLink,
   Image as ImageIcon, Flag
 } from "lucide-react";
@@ -57,10 +57,7 @@ const insightsArticles = [
 ];
 
 const officeLocations = [
-  { city: "Singapore", role: "Asia-Pacific watch desk" },
-  { city: "London", role: "EMEA operations" },
-  { city: "New York", role: "Americas operations" },
-  { city: "Nairobi", role: "Field intelligence hub" },
+  { city: "Bengaluru, India", role: "Primary operations & watch desk" },
 ];
 
 // ---- Top navigation menu structure (dropdowns, click-to-open) ----
@@ -581,6 +578,49 @@ function MapIllustration() {
         </g>
       ))}
     </svg>
+  );
+}
+
+function slugify(str) {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+// Tries a real photo at a predictable path per service; if none has been
+// uploaded yet, falls back to a clean branded graphic instead of a broken
+// image icon or an empty gray box. Drop real photography into
+// /public/images/services/{slug}.jpg (same slug shown in the fallback) and
+// it'll pick it up automatically — no code changes needed.
+function ServiceImage({ label }) {
+  const [failed, setFailed] = useState(false);
+  const slug = slugify(label);
+
+  if (failed) {
+    return (
+      <div style={{
+        width: "100%", aspectRatio: "21/8", borderRadius: 12, overflow: "hidden",
+        background: `linear-gradient(135deg, ${COLORS.black} 0%, #2A2E36 100%)`,
+        display: "flex", alignItems: "center", justifyContent: "center", position: "relative",
+      }}>
+        <div style={{ position: "absolute", inset: 0, opacity: 0.3 }}>
+          <MapIllustration />
+        </div>
+        <div style={{ position: "relative", textAlign: "center", color: "rgba(255,255,255,0.6)", padding: "0 20px" }}>
+          <ImageIcon size={26} color={COLORS.gold} style={{ marginBottom: 8 }} />
+          <div className="sl-mono" style={{ fontSize: 10.5, letterSpacing: "0.03em" }}>
+            Add photography at /images/services/{slug}.jpg
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={`/images/services/${slug}.jpg`}
+      alt={label}
+      onError={() => setFailed(true)}
+      style={{ width: "100%", aspectRatio: "21/8", objectFit: "cover", borderRadius: 12, display: "block" }}
+    />
   );
 }
 
@@ -1329,120 +1369,6 @@ export default function ForeSecure() {
         </div>
       </section>
 
-      {/* PLATFORM */}
-      <section style={{ maxWidth: 1160, margin: "0 auto", padding: "100px 24px 0" }}>
-        <div className="sl-hero-split" style={{ display: "grid", gridTemplateColumns: "0.95fr 1.05fr", gap: 48, alignItems: "center" }}>
-          <Reveal>
-            <div className="sl-card" style={{ padding: 22 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <Radio size={16} color={COLORS.red} />
-                  <span className="sl-display" style={{ fontWeight: 600, fontSize: 14.5 }}>Active incidents</span>
-                </div>
-                <span className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight }}>updated 12s ago</span>
-              </div>
-              {tickerFeed.slice(0, 4).map((item, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderTop: i === 0 ? "none" : `1px solid ${COLORS.line}` }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: levelColor(item.level), flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 500 }}>{item.type}</div>
-                    <div className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight }}>{item.loc}</div>
-                  </div>
-                  <span className="sl-mono" style={{ fontSize: 11, color: COLORS.slateLight }}>{item.t}</span>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-          <Reveal delay={100}>
-            <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>The platform</div>
-            <h2 className="sl-display" style={{ fontSize: "clamp(26px, 3vw, 34px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>
-              One operational picture. Zero blind spots.
-            </h2>
-            <p style={{ fontSize: 15.5, color: COLORS.slate, marginTop: 16, lineHeight: 1.6 }}>
-              ForeSecure plots every traveler and every fixed site against a continuously updated threat layer, so exposure is established before a headline ever runs.
-            </p>
-            <ul style={{ listStyle: "none", padding: 0, marginTop: 22, display: "flex", flexDirection: "column", gap: 12 }}>
-              {["Automatic itinerary ingestion from your travel provider", "Geofenced alerts scoped to site radius, not entire countries", "One-command mass notification with delivery confirmation"].map((t) => (
-                <li key={t} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14.5 }}>
-                  <CheckCircle2 size={17} color={COLORS.red} style={{ marginTop: 2, flexShrink: 0 }} />
-                  <span>{t}</span>
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section style={{ maxWidth: 1160, margin: "0 auto", padding: "100px 24px 0" }}>
-        <Reveal>
-          <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>Chain of custody</div>
-          <h2 className="sl-display" style={{ fontSize: "clamp(26px, 3vw, 34px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>
-            From raw signal to a confirmed order, in four steps.
-          </h2>
-        </Reveal>
-        <div className="sl-grid-4" style={{ marginTop: 36 }}>
-          {[
-            ["01", "Detect", "Thousands of open, licensed, and field-sourced channels are scanned around the clock for emerging activity."],
-            ["02", "Verify", "Trained analysts confirm severity, location, and credibility before anything reaches a client feed."],
-            ["03", "Notify", "Alerts are dispatched only to personnel inside the affected radius — by SMS, app, or direct call."],
-            ["04", "Support", "The watch desk remains reachable for guidance until the situation is confirmed resolved."],
-          ].map(([num, title, desc], i) => (
-            <Reveal key={num} delay={i * 90}>
-              <div style={{ padding: "0 2px" }}>
-                <div className="sl-mono" style={{ fontSize: 13, color: COLORS.gold, fontWeight: 600 }}>{num}</div>
-                <h3 className="sl-display" style={{ fontSize: 17, fontWeight: 600, marginTop: 8 }}>{title}</h3>
-                <p style={{ fontSize: 14, color: COLORS.slate, marginTop: 8, lineHeight: 1.55 }}>{desc}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* TESTIMONIALS */}
-      <section style={{ maxWidth: 1160, margin: "0 auto", padding: "100px 24px 0" }}>
-        <div className="sl-grid-2">
-          {[
-            { quote: "Our travelers were rerouted two hours before the airport closure hit the wire services. That margin is the entire mandate.", name: "Director, Global Security Operations", org: "Meridian Freight Group" },
-            { quote: "Alerts are scoped tightly enough that personnel act on them instead of dismissing them. That discipline is rare.", name: "Head of Duty of Care", org: "Harlow & Vance" },
-          ].map(({ quote, name, org }) => (
-            <Reveal key={name}>
-              <div className="sl-card" style={{ padding: 28 }}>
-                <p className="sl-display" style={{ fontSize: 18, fontWeight: 500, lineHeight: 1.45 }}>&ldquo;{quote}&rdquo;</p>
-                <div style={{ marginTop: 18, fontSize: 13.5, color: COLORS.slate }}>
-                  <div style={{ fontWeight: 600, color: COLORS.black }}>{name}</div>
-                  <div>{org}</div>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* CASE STUDIES */}
-      <section style={{ maxWidth: 1160, margin: "0 auto", padding: "100px 24px 0" }}>
-        <Reveal>
-          <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>After-action reports</div>
-          <h2 className="sl-display" style={{ fontSize: "clamp(26px, 3vw, 34px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>Field record</h2>
-        </Reveal>
-        <div className="sl-grid-2" style={{ marginTop: 32 }}>
-          {[
-            { tag: "Severe weather", title: "340 personnel evacuated ahead of a coastal cyclone", stat: "6 hrs of lead time secured" },
-            { tag: "Civil unrest", title: "Field teams rerouted around a fast-moving protest corridor", stat: "0 incidents recorded" },
-          ].map(({ tag, title, stat }) => (
-            <Reveal key={title}>
-              <div className="sl-card" style={{ padding: 26 }}>
-                <span className="sl-mono" style={{ fontSize: 11.5, color: COLORS.red, background: COLORS.goldLight, padding: "4px 10px", borderRadius: 3 }}>{tag}</span>
-                <h3 className="sl-display" style={{ fontSize: 18, fontWeight: 600, marginTop: 14, lineHeight: 1.35 }}>{title}</h3>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 13.5, color: COLORS.slate }}>
-                  <Clock size={15} color={COLORS.slateLight} />{stat}
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
       </>
       )}
 
@@ -1619,37 +1545,63 @@ export default function ForeSecure() {
 
       {/* SERVICE / INSIGHTS DETAIL PAGE — shown when a nav dropdown leaf item is clicked */}
       {page === "service" && selectedService && SERVICE_CONTENT[selectedService] && (
-        <section style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 24px 100px" }}>
-          <button
-            onClick={() => { setPage("home"); setSelectedService(null); }}
-            style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", color: COLORS.slate, fontSize: 14, fontWeight: 600, padding: 0, marginBottom: 28, font: "inherit" }}
-          >
-            <ArrowRight size={16} style={{ transform: "rotate(180deg)" }} /> Back
-          </button>
+        <>
+        {/* Hero band */}
+        <section style={{ position: "relative", background: COLORS.black, overflow: "hidden", padding: "44px 24px 56px" }}>
+          <div style={{ position: "absolute", inset: 0, opacity: 0.5 }}>
+            <MapIllustration />
+          </div>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(20,23,28,0.55) 0%, rgba(20,23,28,0.92) 100%)" }} />
+          <div style={{ position: "relative", maxWidth: 1000, margin: "0 auto" }}>
+            <button
+              onClick={() => { setPage("home"); setSelectedService(null); }}
+              style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.65)", fontSize: 13.5, fontWeight: 600, padding: 0, marginBottom: 22, font: "inherit" }}
+            >
+              <ArrowRight size={15} style={{ transform: "rotate(180deg)" }} /> Home
+              <ChevronRight size={13} style={{ opacity: 0.6 }} />
+              <span style={{ color: "rgba(255,255,255,0.9)" }}>{SERVICE_CONTENT[selectedService].category}</span>
+            </button>
+            <Reveal>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(201,154,30,0.14)", border: `1px solid ${COLORS.gold}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <ShieldAlert size={19} color={COLORS.gold} />
+                </div>
+                <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.gold, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  {SERVICE_CONTENT[selectedService].category}
+                </div>
+              </div>
+              <h1 className="sl-display" style={{ fontSize: "clamp(30px, 4vw, 46px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 16, color: "#fff", lineHeight: 1.1 }}>
+                {selectedService}
+              </h1>
+              <p style={{ fontSize: 18, color: "rgba(255,255,255,0.88)", marginTop: 18, lineHeight: 1.6, maxWidth: 640 }}>
+                {SERVICE_CONTENT[selectedService].summary}
+              </p>
+              <div style={{ display: "flex", gap: 12, marginTop: 26, flexWrap: "wrap" }}>
+                <button className="sl-btn-primary">Request a briefing <ArrowRight size={15} /></button>
+                <button
+                  onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }}
+                  style={{ background: "rgba(255,255,255,0.06)", color: "#fff", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 6, padding: "12px 20px", fontWeight: 600, fontSize: 14.5, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}
+                >
+                  View Live Alerts
+                </button>
+              </div>
+            </Reveal>
+          </div>
+        </section>
 
+        <section style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 24px 0" }}>
+          <Reveal>
+            <ServiceImage label={selectedService} />
+          </Reveal>
+        </section>
+
+        <section style={{ maxWidth: 1000, margin: "0 auto", padding: "48px 24px 0" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: 48 }} className="sl-service-layout">
             <div>
               <Reveal>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 6, background: COLORS.black, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <ShieldAlert size={17} color={COLORS.gold} />
-                  </div>
-                  <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                    {SERVICE_CONTENT[selectedService].category}
-                  </div>
-                </div>
-                <h1 className="sl-display" style={{ fontSize: "clamp(28px, 3.6vw, 40px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 14 }}>
-                  {selectedService}
-                </h1>
-                <p style={{ fontSize: 17, color: COLORS.slate, marginTop: 16, lineHeight: 1.55, maxWidth: 640, borderLeft: `3px solid ${COLORS.gold}`, paddingLeft: 16 }}>
-                  {SERVICE_CONTENT[selectedService].summary}
-                </p>
-              </Reveal>
-
-              <Reveal delay={100}>
-                <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 18 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                   {SERVICE_CONTENT[selectedService].body.map((para, i) => (
-                    <p key={i} style={{ fontSize: 15.5, color: COLORS.slate, lineHeight: 1.75 }}>{para}</p>
+                    <p key={i} style={{ fontSize: 16.5, fontWeight: 400, color: "#22252B", lineHeight: 1.8 }}>{para}</p>
                   ))}
                 </div>
               </Reveal>
@@ -1685,9 +1637,28 @@ export default function ForeSecure() {
             </div>
           </div>
         </section>
+
+        {/* Page-specific CTA — deliberately not the newsletter box, which stays home-only */}
+        <section style={{ maxWidth: 1000, margin: "0 auto", padding: "80px 24px 100px" }}>
+          <Reveal>
+            <div style={{ background: COLORS.black, borderRadius: 14, padding: "40px 40px", display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ maxWidth: 460 }}>
+                <h3 className="sl-display" style={{ color: "#fff", fontSize: 21, fontWeight: 700 }}>
+                  Ready to talk through {selectedService.toLowerCase()}?
+                </h3>
+                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 14.5, marginTop: 8, lineHeight: 1.55 }}>
+                  A member of our team can walk through what this looks like for your organization specifically.
+                </p>
+              </div>
+              <button className="sl-btn-primary" style={{ flexShrink: 0 }}>Request a briefing <ArrowRight size={15} /></button>
+            </div>
+          </Reveal>
+        </section>
+        </>
       )}
 
       {/* NEWSLETTER */}
+      {page === "home" && (
       <section style={{ maxWidth: 1160, margin: "0 auto", padding: "100px 24px 0" }}>
         <Reveal>
           <div style={{ background: COLORS.black, borderRadius: 14, padding: "48px 40px", display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center", justifyContent: "space-between" }}>
@@ -1725,6 +1696,7 @@ export default function ForeSecure() {
           </div>
         </Reveal>
       </section>
+      )}
 
       {/* FOOTER */}
       <footer style={{ maxWidth: 1160, margin: "0 auto", padding: "80px 24px 40px" }}>
@@ -1748,19 +1720,17 @@ export default function ForeSecure() {
             </div>
           </div>
         </div>
-        <div style={{ marginTop: 36, paddingTop: 28, borderTop: `1px solid ${COLORS.line}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+        <div style={{ marginTop: 36, paddingTop: 28, borderTop: `1px solid ${COLORS.line}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Building2 size={15} color={COLORS.slateLight} />
-            <span style={{ fontSize: 12, color: COLORS.slateLight, textTransform: "uppercase", letterSpacing: "0.04em" }}>Operations centers</span>
+            <span style={{ fontSize: 12, color: COLORS.slateLight, textTransform: "uppercase", letterSpacing: "0.04em" }}>Operations center</span>
           </div>
-          <div className="sl-grid-4">
-            {officeLocations.map(({ city, role }) => (
-              <div key={city}>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{city}</div>
-                <div style={{ fontSize: 12.5, color: COLORS.slateLight, marginTop: 2 }}>{role}</div>
-              </div>
-            ))}
-          </div>
+          {officeLocations.map(({ city, role }) => (
+            <div key={city} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>{city}</span>
+              <span style={{ fontSize: 12.5, color: COLORS.slateLight }}>— {role}</span>
+            </div>
+          ))}
         </div>
 
         <div style={{ marginTop: 32, fontSize: 12.5, color: COLORS.slateLight, display: "flex", gap: 16, alignItems: "center" }}>
