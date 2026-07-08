@@ -106,6 +106,10 @@ const NAV_MENU = [
       },
     ],
   },
+];
+
+// Moved out of the main nav bar into the "···" overflow panel.
+const OVERFLOW_MENU = [
   { label: "Resourcing", href: "#" },
   {
     label: "Insights",
@@ -307,7 +311,45 @@ const SERVICE_CONTENT = {
       "Our team blends former military and law enforcement officers, security engineers, data analysts, and regional specialists who've actually worked in the markets they cover. That mix is deliberate: understanding a risk on paper and understanding it on the ground are different skills, and our clients need both.",
     ],
   },
+  "Travel Tracker": {
+    category: "Platform",
+    summary: "Every traveler, every itinerary, matched against live conditions in real time.",
+    body: [
+      "Travel Tracker ingests itineraries directly from your travel management provider the moment they're booked — flights, hotels, ground transport — and plots each one against ForeSecure's live threat layer. There's no manual entry and no gap between a trip being booked and it being watched.",
+      "If a traveler's route crosses an emerging risk — a storm system, a security incident, an airspace closure — the platform flags the exposure automatically and routes an alert to both the traveler and your duty-of-care team, with enough context to decide on a reroute or a hold before the situation develops further.",
+      "Dashboards give your security desk a single map view of everyone currently in motion, filterable by region, risk level, or business unit, so a live headcount of exposed personnel is always one glance away.",
+    ],
+  },
+  "Mass Communication": {
+    category: "Platform",
+    summary: "Reach the right people, at the right radius, in seconds — not the whole company.",
+    body: [
+      "When a situation demands a notification, speed and precision both matter. Mass Communication lets your team compose a single alert and dispatch it instantly to everyone inside a defined radius — a building, a city, a country — by SMS, app push, email, or automated voice call, with delivery and read receipts tracked in real time.",
+      "Message templates are pre-approved by category (severe weather, security incident, facility lockdown, all-clear) so a response doesn't have to be drafted from scratch under pressure, and every dispatch is logged for after-action review.",
+      "Two-way check-in requests can go out alongside the alert itself, so the same message that warns your people can also confirm they're safe — turning a one-way broadcast into a real accountability tool.",
+    ],
+  },
 };
+
+// Finds the other items in the same group as `label` within NAV_MENU, so a
+// service detail page can show "related services" instead of a dead end.
+function findSiblingServices(label) {
+  for (const top of NAV_MENU) {
+    if (!top.items) continue;
+    for (const entry of top.items) {
+      if (entry.items) {
+        const match = entry.items.find((leaf) => leaf.label === label);
+        if (match) return entry.items.map((l) => l.label).filter((l) => l !== label);
+      }
+    }
+    // Also treat the top-level Consulting leaves themselves as one group.
+    const topLevelLabels = top.items.filter((e) => !e.items).map((e) => e.label);
+    if (topLevelLabels.includes(label)) {
+      return topLevelLabels.filter((l) => l !== label);
+    }
+  }
+  return [];
+}
 
 function useReveal() {
   const ref = useRef(null);
@@ -354,9 +396,27 @@ function ForeSecureMark({ size = 30 }) {
   );
 }
 
-// ---- Desktop dropdown nav item (click to open, supports one nested flyout level) ----
+// New logo lockup: mark + wordmark are white/gold, designed for a dark
+// background, so they sit on a small dark chip here rather than directly on
+// the site's light header/footer — otherwise the white parts would vanish.
+function BrandLogo({ height = 34 }) {
+  return (
+    <div
+      style={{
+        display: "flex", alignItems: "center", gap: 10, background: COLORS.black,
+        borderRadius: 8, padding: `${Math.round(height * 0.22)}px ${Math.round(height * 0.34)}px`,
+      }}
+    >
+      <img src="/images/brand/mark.png" alt="" style={{ height, width: "auto", display: "block" }} />
+      <img src="/images/brand/wordmark.png" alt="ForeSecure" style={{ height: Math.round(height * 0.78), width: "auto", display: "block" }} />
+    </div>
+  );
+}
+
+// ---- Desktop mega-menu (click to open). Renders every group as a column
+// with its leaf items listed underneath — no hover flyouts, which is what
+// made the old version feel like a default dropdown. ----
 function NavMenuItem({ item, isOpen, onToggle, onNavigate }) {
-  const [subOpen, setSubOpen] = useState(null);
   const hasChildren = Boolean(item.items && item.items.length);
 
   return (
@@ -383,52 +443,49 @@ function NavMenuItem({ item, isOpen, onToggle, onNavigate }) {
         </button>
       )}
 
-      {hasChildren && isOpen && (
+      {hasChildren && (
         <div
-          className="sl-card sl-dropdown-panel"
-          style={{ position: "absolute", top: "calc(100% + 16px)", left: 0 }}
+          className="sl-card sl-megamenu"
+          style={{
+            position: "absolute", top: "calc(100% + 16px)", left: "50%",
+            transform: isOpen ? "translate(-50%, 0)" : "translate(-50%, -8px)",
+            opacity: isOpen ? 1 : 0,
+            pointerEvents: isOpen ? "auto" : "none",
+            transition: "opacity 0.22s ease, transform 0.22s ease",
+          }}
         >
-          {item.items.map((sub) => {
-            const subHasChildren = Boolean(sub.items && sub.items.length);
-            return (
-              <div
-                key={sub.label}
-                style={{ position: "relative" }}
-                onMouseEnter={() => subHasChildren && setSubOpen(sub.label)}
-                onMouseLeave={() => subHasChildren && setSubOpen(null)}
-              >
-                <button
-                  className="sl-dropdown-link"
-                  style={{ width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", font: "inherit" }}
-                  onClick={() => {
-                    if (subHasChildren) {
-                      setSubOpen((s) => (s === sub.label ? null : sub.label));
-                    } else {
-                      onNavigate(sub.label);
-                    }
-                  }}
-                >
-                  <span>{sub.label}</span>
-                  {subHasChildren && <ChevronRight size={14} color={COLORS.slateLight} style={{ flexShrink: 0 }} />}
-                </button>
-
-                {subHasChildren && subOpen === sub.label && (
-                  <div className="sl-card sl-dropdown-panel sl-dropdown-panel--flyout">
-                    {sub.items.map((leaf) => (
-                      <button
-                        key={leaf.label}
-                        className="sl-dropdown-link"
-                        style={{ width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", font: "inherit" }}
-                        onClick={() => onNavigate(leaf.label)}
-                      >
-                        <span>{leaf.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          <div className="sl-megamenu-grid">
+            {item.items.map((group) => {
+              const groupHasChildren = Boolean(group.items && group.items.length);
+              return (
+                <div key={group.label} className="sl-megamenu-col">
+                  {groupHasChildren ? (
+                    <>
+                      <div className="sl-megamenu-heading">{group.label}</div>
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        {group.items.map((leaf) => (
+                          <button
+                            key={leaf.label}
+                            className="sl-dropdown-link"
+                            onClick={() => onNavigate(leaf.label)}
+                          >
+                            {leaf.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <button
+                      className="sl-dropdown-link sl-dropdown-link--top"
+                      onClick={() => onNavigate(group.label)}
+                    >
+                      {group.label}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -726,16 +783,15 @@ function RotatingLabel({ words, index }) {
   );
 }
 
-const dotMenuItems = [
-  { label: "Consulting", chevron: true },
-  { label: "Resourcing", chevron: false },
-  { label: "Insights", chevron: true },
-  { label: "Careers", chevron: false },
-  { label: "About us", chevron: true },
-  { label: "Get in Touch", chevron: false },
-];
+function FullScreenMenu({ open, onClose, onNavigate }) {
+  const [expanded, setExpanded] = useState(null);
 
-function FullScreenMenu({ open, onClose }) {
+  function handleLeafClick(label) {
+    onNavigate(label);
+    onClose();
+    setExpanded(null);
+  }
+
   return (
     <div
       style={{
@@ -745,31 +801,58 @@ function FullScreenMenu({ open, onClose }) {
         display: "flex", flexDirection: "column",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 28px", borderBottom: `1px solid ${COLORS.line}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <ForeSecureMark size={24} />
-          <span className="sl-display" style={{ fontWeight: 700, fontSize: 17 }}>ForeSecure</span>
-        </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 28px", borderBottom: `1px solid ${COLORS.line}` }}>
+        <BrandLogo height={26} />
         <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 6 }} aria-label="Close menu">
           <X size={26} color={COLORS.black} />
         </button>
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {dotMenuItems.map(({ label, chevron }) => (
-          <a
-            key={label}
-            href="#"
-            style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "22px 28px", borderBottom: `1px solid ${COLORS.line}`,
-              textDecoration: "none", color: COLORS.black, fontSize: 22,
-            }}
-            className="sl-display"
-          >
-            {label}
-            {chevron && <ChevronRight size={22} color={COLORS.slateLight} />}
-          </a>
-        ))}
+        {OVERFLOW_MENU.map((item) => {
+          const hasChildren = Boolean(item.items && item.items.length);
+          const isExpanded = expanded === item.label;
+          return (
+            <div key={item.label} style={{ borderBottom: `1px solid ${COLORS.line}` }}>
+              <button
+                onClick={() => (hasChildren ? setExpanded(isExpanded ? null : item.label) : handleLeafClick(item.label))}
+                className="sl-display"
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+                  padding: "22px 28px", background: "none", border: "none", cursor: "pointer",
+                  color: COLORS.black, fontSize: 22, font: "inherit", fontWeight: 500, textAlign: "left",
+                }}
+              >
+                {item.label}
+                {hasChildren && (
+                  <ChevronDown size={22} color={COLORS.slateLight} style={{ transition: "transform 0.2s ease", transform: isExpanded ? "rotate(180deg)" : "none" }} />
+                )}
+              </button>
+              {hasChildren && isExpanded && (
+                <div style={{ padding: "0 28px 20px", display: "flex", flexDirection: "column", gap: 4 }}>
+                  {item.items.map((sub) => (
+                    <button
+                      key={sub.label}
+                      onClick={() => handleLeafClick(sub.label)}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer", textAlign: "left", font: "inherit",
+                        padding: "10px 12px", borderRadius: 6, fontSize: 15, color: COLORS.slate,
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = COLORS.goldLight)}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                    >
+                      {sub.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ padding: 28, borderTop: `1px solid ${COLORS.line}` }}>
+        <button className="sl-btn-primary" style={{ width: "100%", justifyContent: "center" }} onClick={onClose}>
+          Request briefing <ArrowRight size={15} />
+        </button>
       </div>
     </div>
   );
@@ -1008,23 +1091,37 @@ export default function ForeSecure() {
         .sl-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
         .sl-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .sl-split-view { display: grid; grid-template-columns: 1fr 1fr; }
-        .sl-dropdown-panel {
-          box-shadow: 0 20px 45px -18px rgba(20,23,28,0.28);
-          padding: 10px; min-width: 300px; max-width: 340px; z-index: 60;
+        .sl-megamenu {
+          box-shadow: 0 24px 60px -20px rgba(20,23,28,0.32);
+          padding: 28px 30px; width: min(760px, 88vw); z-index: 60;
+          border-top: 3px solid ${COLORS.red};
         }
-        .sl-dropdown-panel--flyout { position: absolute; top: 0; left: 100%; margin-left: 8px; }
+        .sl-megamenu-grid {
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px 28px;
+        }
+        .sl-megamenu-col { display: flex; flex-direction: column; gap: 2px; }
+        .sl-megamenu-heading {
+          font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13px;
+          color: ${COLORS.black}; margin-bottom: 6px; padding-bottom: 8px;
+          border-bottom: 1px solid ${COLORS.line};
+        }
         .sl-dropdown-link {
-          display: flex; align-items: center; justify-content: space-between; gap: 10px;
-          padding: 10px 12px; border-radius: 6px; font-size: 13.5px; color: ${COLORS.black};
-          text-decoration: none; line-height: 1.4;
+          display: block; text-align: left; background: none; border: none; font: inherit;
+          width: 100%; padding: 7px 8px; margin: 0 -8px; border-radius: 6px;
+          font-size: 13px; color: ${COLORS.slate}; cursor: pointer; line-height: 1.4;
         }
-        .sl-dropdown-link:hover { background: ${COLORS.goldLight}; }
+        .sl-dropdown-link:hover { background: ${COLORS.goldLight}; color: ${COLORS.black}; }
+        .sl-dropdown-link--top {
+          font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px;
+          color: ${COLORS.black}; padding: 7px 8px;
+        }
         .sl-mobile-details summary { cursor: pointer; padding: 10px 0; list-style: none; }
         .sl-mobile-details summary::-webkit-details-marker { display: none; }
         .sl-mobile-details summary::after { content: "+"; float: right; color: ${COLORS.slateLight}; }
         .sl-mobile-details[open] summary::after { content: "–"; }
         @media (max-width: 900px) {
           .sl-split-view { grid-template-columns: 1fr; }
+          .sl-service-layout { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 900px) {
           .sl-grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -1041,25 +1138,30 @@ export default function ForeSecure() {
 
       {/* NAV */}
       <header style={{ borderBottom: `1px solid ${COLORS.line}`, background: "rgba(247,246,243,0.94)", backdropFilter: "blur(6px)", position: "sticky", top: 0, zIndex: 40 }}>
-        <div style={{ maxWidth: 1160, margin: "0 auto", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <button
-              onClick={() => { setPage("home"); setSelectedAlert(null); setSelectedService(null); }}
-              style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", textAlign: "left" }}
-              aria-label="ForeSecure home"
-            >
-              <ForeSecureMark size={28} />
-              <div>
-                <div style={{ display: "inline-block" }}>
-                  <span className="sl-display" style={{ fontWeight: 700, fontSize: 19, letterSpacing: "-0.02em", display: "block", color: COLORS.black }}>ForeSecure</span>
-                  <img
-                    src="/images/brand/underline.jpg"
-                    alt=""
-                    style={{ display: "block", width: 130, height: 9, objectFit: "fill", borderRadius: 1, marginTop: 3 }}
-                  />
-                </div>
-                <span className="sl-mono" style={{ fontSize: 9.5, color: COLORS.red, fontWeight: 700, letterSpacing: "0.12em", display: "block", marginTop: 3 }}>MONITOR · ASSESS · PROTECT</span>
-              </div>
+        <div style={{ maxWidth: 1160, margin: "0 auto", padding: "10px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+          <button
+            onClick={() => { setPage("home"); setSelectedAlert(null); setSelectedService(null); }}
+            style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", textAlign: "left", flexShrink: 0 }}
+            aria-label="ForeSecure home"
+          >
+            <BrandLogo height={30} />
+          </button>
+
+          <nav ref={navRef} className="sl-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 30, flex: 1, justifyContent: "center" }}>
+            {NAV_MENU.map((item) => (
+              <NavMenuItem
+                key={item.label}
+                item={item}
+                isOpen={openMenu === item.label}
+                onToggle={() => setOpenMenu((m) => (m === item.label ? null : item.label))}
+                onNavigate={handleNavigate}
+              />
+            ))}
+            <button onClick={() => handleNavigate("Travel Tracker")} className="sl-nav-link" style={{ background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit" }}>
+              Travel Tracker
+            </button>
+            <button onClick={() => handleNavigate("Mass Communication")} className="sl-nav-link" style={{ background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit" }}>
+              Mass Communication
             </button>
             <button
               onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }}
@@ -1077,21 +1179,10 @@ export default function ForeSecure() {
               </span>
               Live Alerts
             </button>
-          </div>
-          <nav ref={navRef} className="sl-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 28 }}>
-            {NAV_MENU.map((item) => (
-              <NavMenuItem
-                key={item.label}
-                item={item}
-                isOpen={openMenu === item.label}
-                onToggle={() => setOpenMenu((m) => (m === item.label ? null : item.label))}
-                onNavigate={handleNavigate}
-              />
-            ))}
           </nav>
-          <div className="sl-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+
+          <div className="sl-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
             <a href="#" className="sl-nav-link">Sign in</a>
-            <button className="sl-btn-primary">Request briefing <ArrowRight size={15} /></button>
             <button
               onClick={() => setDotMenuOpen(true)}
               style={{ background: "none", border: "none", cursor: "pointer", padding: 6, display: "flex" }}
@@ -1120,11 +1211,14 @@ export default function ForeSecure() {
         {menuOpen && (
           <div style={{ padding: "8px 24px 20px", display: "flex", flexDirection: "column", gap: 6, borderTop: `1px solid ${COLORS.line}` }}>
             <MobileNavAccordion menu={NAV_MENU} onNavigate={handleNavigate} />
-            <button className="sl-btn-primary" style={{ justifyContent: "center", marginTop: 10 }}>Request briefing <ArrowRight size={15} /></button>
+            <button onClick={() => handleNavigate("Travel Tracker")} className="sl-nav-link" style={{ padding: "10px 0", textAlign: "left", background: "none", border: "none", cursor: "pointer", font: "inherit" }}>Travel Tracker</button>
+            <button onClick={() => handleNavigate("Mass Communication")} className="sl-nav-link" style={{ padding: "10px 0", textAlign: "left", background: "none", border: "none", cursor: "pointer", font: "inherit" }}>Mass Communication</button>
+            <button onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); setMenuOpen(false); }} className="sl-nav-link" style={{ padding: "10px 0", textAlign: "left", background: "none", border: "none", cursor: "pointer", font: "inherit" }}>Live Alerts</button>
+            <a href="#" className="sl-nav-link" style={{ padding: "10px 0" }}>Sign in</a>
           </div>
         )}
       </header>
-      <FullScreenMenu open={dotMenuOpen} onClose={() => setDotMenuOpen(false)} />
+      <FullScreenMenu open={dotMenuOpen} onClose={() => setDotMenuOpen(false)} onNavigate={handleNavigate} />
 
       {page === "home" && (
       <>
@@ -1183,79 +1277,26 @@ export default function ForeSecure() {
 
       {page === "home" && (
       <>
-      {/* TRUSTED-BY STATS BAR */}
+      {/* Straight to Live Alerts — no duplicate summary here, just the door to it */}
       <section style={{ maxWidth: 1160, margin: "0 auto", padding: "56px 24px 0" }}>
         <Reveal>
-          <div className="sl-grid-4">
-            {trustedByStats.map(({ fig, label }) => (
-              <div key={label} style={{ borderLeft: `2px solid ${COLORS.gold}`, paddingLeft: 16 }}>
-                <div className="sl-display" style={{ fontSize: 26, fontWeight: 700 }}>{fig}</div>
-                <div style={{ fontSize: 13, color: COLORS.slate, marginTop: 4, lineHeight: 1.4 }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        </Reveal>
-      </section>
-
-      {/* REGIONAL WATCH — live RSS feed split into four boxes side by side */}
-      <section style={{ maxWidth: 1160, margin: "0 auto", padding: "96px 24px 0" }}>
-        <Reveal>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div className="sl-card" style={{ padding: "40px 36px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
             <div>
-              <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>Regional watch</div>
-              <h2 className="sl-display" style={{ fontSize: "clamp(26px, 3vw, 34px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>
-                Live coverage, by region.
+              <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>Intelligence desk</div>
+              <h2 className="sl-display" style={{ fontSize: "clamp(24px, 3vw, 30px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>
+                Live, high and medium-risk alerts — updated continuously.
               </h2>
+              <p style={{ fontSize: 14.5, color: COLORS.slate, marginTop: 10, maxWidth: 520 }}>
+                {liveArticles && liveArticles.length > 0
+                  ? `${liveArticles.length} active briefings across APAC, EMEA, North America and Latin America.`
+                  : "Loading the latest briefings…"}
+              </p>
             </div>
-            <div className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight, display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: newsLoading ? COLORS.gold : "#3FA65B", flexShrink: 0 }} />
-              {newsLoading ? "Refreshing…" : newsUpdatedAt ? `Updated ${timeAgo(newsUpdatedAt)}` : "Live"}
-            </div>
+            <button onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }} className="sl-btn-primary" style={{ flexShrink: 0 }}>
+              View Live Alerts <ArrowUpRight size={16} />
+            </button>
           </div>
         </Reveal>
-        <div className="sl-grid-4" style={{ marginTop: 32, alignItems: "stretch" }}>
-          {REGION_ORDER.map((key, i) => {
-            const items = (regionNews && regionNews[key]) || [];
-            const RegionIcon = REGION_ICONS[key] || Globe2;
-            return (
-              <Reveal key={key} delay={i * 90}>
-                <div className="sl-card" style={{ padding: 20, height: "100%", display: "flex", flexDirection: "column" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 12, borderBottom: `1px solid ${COLORS.line}` }}>
-                    <span className="sl-display" style={{ fontWeight: 700, fontSize: 15 }}>{REGION_LABELS[key]}</span>
-                    <RegionIcon size={15} color={COLORS.slateLight} />
-                  </div>
-                  <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 4, maxHeight: 340, overflowY: "auto", paddingRight: 4 }}>
-                    {items.length > 0 ? (
-                      items.map((item) => (
-                        <button
-                          key={item.url}
-                          onClick={() => setLocationModal({ title: item.title, url: item.url, source: item.source, location: item.location })}
-                          style={{ display: "block", width: "100%", padding: "10px 0", borderBottom: `1px solid ${COLORS.line}`, textDecoration: "none", color: "inherit", background: "none", border: "none", borderBottomWidth: 1, borderBottomColor: COLORS.line, borderBottomStyle: "solid", textAlign: "left", cursor: "pointer", font: "inherit" }}
-                        >
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span className="sl-mono" style={{ fontSize: 10, color: COLORS.red, background: COLORS.goldLight, padding: "2px 7px", borderRadius: 3, fontWeight: 600 }}>{item.tag}</span>
-                            <span className="sl-mono" style={{ fontSize: 10.5, color: COLORS.slateLight }}>
-                              {item.publishedAt ? timeAgo(item.publishedAt) : ""}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: 13.5, fontWeight: 500, marginTop: 6, lineHeight: 1.4 }}>{item.title}</div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: COLORS.slateLight, marginTop: 4 }}>
-                            {item.location && <MapPin size={11} />}
-                            {item.location ? item.location.name : item.source}
-                          </div>
-                        </button>
-                      ))
-                    ) : (
-                      <div style={{ fontSize: 13, color: COLORS.slateLight, padding: "16px 0" }}>
-                        {newsLoading ? "Loading live coverage…" : "No active reports right now."}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Reveal>
-            );
-          })}
-        </div>
       </section>
 
       {/* SOLUTIONS GRID */}
@@ -1400,28 +1441,6 @@ export default function ForeSecure() {
             </Reveal>
           ))}
         </div>
-      </section>
-
-      {/* INSIGHTS / NEWS — moved to its own Live Alerts page; this is just a teaser */}
-      <section style={{ maxWidth: 1160, margin: "0 auto", padding: "100px 24px 0" }}>
-        <Reveal>
-          <div className="sl-card" style={{ padding: "40px 36px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
-            <div>
-              <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>Intelligence desk</div>
-              <h2 className="sl-display" style={{ fontSize: "clamp(24px, 3vw, 30px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>
-                Live, high and medium-risk alerts — updated continuously.
-              </h2>
-              <p style={{ fontSize: 14.5, color: COLORS.slate, marginTop: 10, maxWidth: 520 }}>
-                {liveArticles && liveArticles.length > 0
-                  ? `${liveArticles.length} active briefings across APAC, India, EMEA and the Americas.`
-                  : "Loading the latest briefings…"}
-              </p>
-            </div>
-            <button onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }} className="sl-btn-primary" style={{ flexShrink: 0 }}>
-              View Live Alerts <ArrowUpRight size={16} />
-            </button>
-          </div>
-        </Reveal>
       </section>
 
       </>
@@ -1600,7 +1619,7 @@ export default function ForeSecure() {
 
       {/* SERVICE / INSIGHTS DETAIL PAGE — shown when a nav dropdown leaf item is clicked */}
       {page === "service" && selectedService && SERVICE_CONTENT[selectedService] && (
-        <section style={{ maxWidth: 860, margin: "0 auto", padding: "40px 24px 100px" }}>
+        <section style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 24px 100px" }}>
           <button
             onClick={() => { setPage("home"); setSelectedService(null); }}
             style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", color: COLORS.slate, fontSize: 14, fontWeight: 600, padding: 0, marginBottom: 28, font: "inherit" }}
@@ -1608,48 +1627,63 @@ export default function ForeSecure() {
             <ArrowRight size={16} style={{ transform: "rotate(180deg)" }} /> Back
           </button>
 
-          <Reveal>
-            <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-              {SERVICE_CONTENT[selectedService].category}
-            </div>
-            <h1 className="sl-display" style={{ fontSize: "clamp(28px, 3.6vw, 40px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 10 }}>
-              {selectedService}
-            </h1>
-            <p style={{ fontSize: 17, color: COLORS.slate, marginTop: 16, lineHeight: 1.55, maxWidth: 640 }}>
-              {SERVICE_CONTENT[selectedService].summary}
-            </p>
-          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: 48 }} className="sl-service-layout">
+            <div>
+              <Reveal>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 6, background: COLORS.black, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <ShieldAlert size={17} color={COLORS.gold} />
+                  </div>
+                  <div className="sl-mono" style={{ fontSize: 12.5, color: COLORS.red, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                    {SERVICE_CONTENT[selectedService].category}
+                  </div>
+                </div>
+                <h1 className="sl-display" style={{ fontSize: "clamp(28px, 3.6vw, 40px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 14 }}>
+                  {selectedService}
+                </h1>
+                <p style={{ fontSize: 17, color: COLORS.slate, marginTop: 16, lineHeight: 1.55, maxWidth: 640, borderLeft: `3px solid ${COLORS.gold}`, paddingLeft: 16 }}>
+                  {SERVICE_CONTENT[selectedService].summary}
+                </p>
+              </Reveal>
 
-          {/* Image placeholder — left empty intentionally, drop real photography in later */}
-          <Reveal delay={80}>
-            <div
-              style={{
-                marginTop: 32, height: 280, borderRadius: 12, border: `1.5px dashed ${COLORS.line}`,
-                background: COLORS.white, display: "flex", flexDirection: "column", alignItems: "center",
-                justifyContent: "center", gap: 8, color: COLORS.slateLight,
-              }}
-            >
-              <ImageIcon size={28} color={COLORS.slateLight} />
-              <span className="sl-mono" style={{ fontSize: 11.5, letterSpacing: "0.04em", textTransform: "uppercase" }}>Image placeholder</span>
+              <Reveal delay={100}>
+                <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 18 }}>
+                  {SERVICE_CONTENT[selectedService].body.map((para, i) => (
+                    <p key={i} style={{ fontSize: 15.5, color: COLORS.slate, lineHeight: 1.75 }}>{para}</p>
+                  ))}
+                </div>
+              </Reveal>
             </div>
-          </Reveal>
 
-          <Reveal delay={140}>
-            <div style={{ marginTop: 36, display: "flex", flexDirection: "column", gap: 18 }}>
-              {SERVICE_CONTENT[selectedService].body.map((para, i) => (
-                <p key={i} style={{ fontSize: 15.5, color: COLORS.slate, lineHeight: 1.75 }}>{para}</p>
-              ))}
+            <div>
+              {(() => {
+                const siblings = findSiblingServices(selectedService);
+                if (siblings.length === 0) return null;
+                return (
+                  <Reveal delay={140}>
+                    <div className="sl-card" style={{ padding: 20, position: "sticky", top: 90 }}>
+                      <div className="sl-mono" style={{ fontSize: 11, color: COLORS.slateLight, letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 12 }}>
+                        Related services
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        {siblings.map((label) => (
+                          <button
+                            key={label}
+                            onClick={() => handleNavigate(label)}
+                            className="sl-dropdown-link"
+                            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}
+                          >
+                            <span>{label}</span>
+                            <ChevronRight size={13} color={COLORS.slateLight} style={{ flexShrink: 0 }} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </Reveal>
+                );
+              })()}
             </div>
-          </Reveal>
-
-          <Reveal delay={180}>
-            <div style={{ marginTop: 40, display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <button className="sl-btn-primary">Request briefing <ArrowRight size={15} /></button>
-              <button onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }} className="sl-btn-ghost">
-                View Live Alerts
-              </button>
-            </div>
-          </Reveal>
+          </div>
         </section>
       )}
 
@@ -1695,10 +1729,7 @@ export default function ForeSecure() {
       {/* FOOTER */}
       <footer style={{ maxWidth: 1160, margin: "0 auto", padding: "80px 24px 40px" }}>
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 32, borderTop: `1px solid ${COLORS.line}`, paddingTop: 36 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <ForeSecureMark size={24} />
-            <span className="sl-display" style={{ fontWeight: 700, fontSize: 16 }}>ForeSecure</span>
-          </div>
+          <BrandLogo height={26} />
           <div style={{ display: "flex", gap: 40, flexWrap: "wrap", fontSize: 13.5, color: COLORS.slate }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <span style={{ color: COLORS.slateLight, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>Product</span>
