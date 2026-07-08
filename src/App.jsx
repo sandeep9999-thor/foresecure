@@ -405,7 +405,7 @@ function WordmarkText({ size = 34 }) {
         <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: size, color: COLORS.black, lineHeight: 1 }}>FORE</span>
         <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: size, color: COLORS.gold, lineHeight: 1 }}>SECURE</span>
       </div>
-      <div style={{ fontSize: size * 0.22, color: COLORS.slate, letterSpacing: "0.1em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ fontSize: size * 0.34, color: COLORS.black, letterSpacing: "0.001em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8 }}>
         <span>SECURITY ADVISORY</span><span>|</span><span>RISK INSIGHTS</span><span>|</span><span>STRATEGIC SECURITY</span>
       </div>
       <img src="/images/brand/underline.png" alt="" style={{ width: "100%", height: "auto", display: "block", marginTop: 2 }} />
