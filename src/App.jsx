@@ -393,19 +393,25 @@ function ForeSecureMark({ size = 30 }) {
   );
 }
 
-// New logo lockup: mark + wordmark are white/gold, designed for a dark
-// background, so they sit on a small dark chip here rather than directly on
-// the site's light header/footer — otherwise the white parts would vanish.
+// Logo lockup: mark + wordmark PNGs both have transparent backgrounds and
+// are black/gold, so they read fine directly on the site's light
+// header/footer — no dark chip needed. `height` here is the wordmark's
+// height; the mark is taller than the wordmark's own cap-height in the
+// source art, so it's scaled up relative to it to look correctly sized
+// next to the text, not tiny.
 function BrandLogo({ height = 34 }) {
   return (
-    <div
-      style={{
-        display: "flex", alignItems: "center", gap: 10, background: COLORS.black,
-        borderRadius: 8, padding: `${Math.round(height * 0.22)}px ${Math.round(height * 0.34)}px`,
-      }}
-    >
-      <img src="/images/brand/mark.png" alt="" style={{ height, width: "auto", display: "block" }} />
-      <img src="/images/brand/wordmark.png" alt="ForeSecure" style={{ height: Math.round(height * 0.78), width: "auto", display: "block" }} />
+    <div style={{ display: "flex", alignItems: "center", gap: Math.round(height * 0.3) }}>
+      <img
+        src="/images/brand/mark.png"
+        alt=""
+        style={{ height: Math.round(height * 1.9), width: "auto", display: "block" }}
+      />
+      <img
+        src="/images/brand/wordmark.png"
+        alt="ForeSecure"
+        style={{ height, width: "auto", display: "block" }}
+      />
     </div>
   );
 }
@@ -1178,7 +1184,7 @@ export default function ForeSecure() {
 
       {/* NAV */}
       <header style={{ borderBottom: `1px solid ${COLORS.line}`, background: "rgba(247,246,243,0.94)", backdropFilter: "blur(6px)", position: "sticky", top: 0, zIndex: 40 }}>
-        <div style={{ maxWidth: 1160, margin: "0 auto", padding: "10px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+        <div style={{ maxWidth: 1160, margin: "0 auto", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
           <button
             onClick={() => { setPage("home"); setSelectedAlert(null); setSelectedService(null); }}
             style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", textAlign: "left", flexShrink: 0 }}
@@ -1701,7 +1707,7 @@ export default function ForeSecure() {
       {/* FOOTER */}
       <footer style={{ maxWidth: 1160, margin: "0 auto", padding: "80px 24px 40px" }}>
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 32, borderTop: `1px solid ${COLORS.line}`, paddingTop: 36 }}>
-          <BrandLogo height={26} />
+          <BrandLogo height={32} />
           <div style={{ display: "flex", gap: 40, flexWrap: "wrap", fontSize: 13.5, color: COLORS.slate }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <span style={{ color: COLORS.slateLight, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>Product</span>
