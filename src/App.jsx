@@ -402,18 +402,16 @@ function WordmarkText({ size = 34 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       <div style={{ display: "flex", gap: "0.22em" }}>
-        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: size, color: COLORS.black, lineHeight: 1 }}>FORE</span>
-        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: size, color: COLORS.gold, lineHeight: 1 }}>SECURE</span>
+        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: size, color: COLORS.black, lineHeight: 1 }}>Fore</span>
+        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: size, color: COLORS.gold, lineHeight: 1 }}>Secure</span>
       </div>
-      <div style={{ fontSize: size * 0.34, color: COLORS.black, letterSpacing: "0.001em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8 }}>
-        <span>SECURITY ADVISORY</span><span>|</span><span>RISK INSIGHTS</span><span>|</span><span>STRATEGIC SECURITY</span>
-      </div>
-      <img src="/images/brand/underline.png" alt="" style={{ width: "100%", height: "auto", display: "block", marginTop: 2 }} />
+      
+      <img src="/images/brand/underline.jpg" alt="" style={{ width: "100%", height: Math.max(3, Math.round(size * 0.2)), display: "block", marginTop: 2}} />
     </div>
   );
 }
 
-function BrandLogo({ height = 34 }) {
+function BrandLogo({ height = 45 }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: Math.round(height * 0.3) }}>
       <img
