@@ -4,7 +4,7 @@ import {
   MapPin, Clock, CheckCircle2, Menu, X, Mail, Bell, Activity,
   Globe2, Lock, Building2, Newspaper, ArrowUpRight,
   MoreHorizontal, ChevronRight, ChevronDown, RefreshCw, MapPinned, ExternalLink,
-  Image as ImageIcon, Flag
+  Image as ImageIcon, Flag, Megaphone, Plus
 } from "lucide-react";
 
 const FONT_IMPORT_URL =
@@ -406,7 +406,7 @@ function WordmarkText({ size = 34 }) {
         <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: size, color: COLORS.gold, lineHeight: 1 }}>Secure</span>
       </div>
       
-      <img src="/images/brand/underline.jpg" alt="" style={{ width: "100%", height: Math.max(3, Math.round(size * 0.2)), display: "block", marginTop: 2}} />
+      <img src="/images/brand/underline.jpg" alt="" style={{ width: "100%", height:Math.max(3, Math.round(size * 0.2)), display: "block", marginTop: 2 }} />
     </div>
   );
 }
@@ -978,6 +978,107 @@ function LocationModal({ data, onClose }) {
   );
 }
 
+// Anyone can view Special Advisories — this modal is just how a permitted
+// team member (host / handler) publishes one. The password field isn't
+// enforced client-side; it's sent to /api/advisories and checked against
+// ADVISORY_PASSWORD on the server, so a wrong password just gets a normal
+// rejected-request error back rather than a fake client-side gate.
+function AdvisoryModal({ open, form, setForm, password, setPassword, submitting, error, onSubmit, onClose }) {
+  if (!open) return null;
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const inputStyle = {
+    width: "100%", padding: "10px 12px", borderRadius: 6, border: `1.5px solid ${COLORS.line}`,
+    fontSize: 14, fontFamily: "inherit", color: COLORS.black, background: "#fff",
+  };
+  const labelStyle = { display: "block", fontSize: 12.5, fontWeight: 600, color: COLORS.slate, marginBottom: 6 };
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, background: "rgba(20,23,28,0.72)", zIndex: 200,
+        display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ background: "#fff", borderRadius: 14, maxWidth: 520, width: "100%", boxShadow: "0 30px 80px -20px rgba(0,0,0,0.5)" }}
+      >
+        <div style={{ padding: "18px 22px", borderBottom: `1px solid ${COLORS.line}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Megaphone size={18} color={COLORS.gold} />
+            <h3 className="sl-display" style={{ fontSize: 17, fontWeight: 600, margin: 0 }}>Publish a Special Advisory</h3>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, flexShrink: 0 }} aria-label="Close">
+            <X size={20} color={COLORS.slateLight} />
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <div>
+            <label style={labelStyle}>Headline</label>
+            <input required value={form.title} onChange={set("title")} placeholder="e.g. Curfew declared in central district" style={inputStyle} />
+          </div>
+
+          <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Risk level</label>
+              <select value={form.risk} onChange={set("risk")} style={inputStyle}>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Region</label>
+              <select value={form.region} onChange={set("region")} style={inputStyle}>
+                <option value="APAC">APAC</option>
+                <option value="INDIA">India</option>
+                <option value="EMEA">EMEA</option>
+                <option value="AMERICAS">Americas</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Tag</label>
+              <input value={form.tag} onChange={set("tag")} placeholder="e.g. Crisis" style={inputStyle} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Location name</label>
+              <input value={form.location} onChange={set("location")} placeholder="e.g. Manila, Philippines" style={inputStyle} />
+            </div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Source</label>
+            <input value={form.source} onChange={set("source")} placeholder="e.g. Internal briefing" style={inputStyle} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Link (optional)</label>
+            <input value={form.url} onChange={set("url")} placeholder="https://…" style={inputStyle} />
+          </div>
+
+          <div style={{ borderTop: `1px solid ${COLORS.line}`, paddingTop: 16 }}>
+            <label style={labelStyle}>
+              <Lock size={12} style={{ verticalAlign: -1, marginRight: 5 }} />
+              Publishing password
+            </label>
+            <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Only for authorized team members" style={inputStyle} />
+          </div>
+
+          {error && <div style={{ fontSize: 13, color: COLORS.red }}>{error}</div>}
+
+          <button type="submit" disabled={submitting} className="sl-btn-primary" style={{ justifyContent: "center", opacity: submitting ? 0.7 : 1 }}>
+            {submitting ? "Publishing…" : "Publish advisory"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function ForeSecure() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dotMenuOpen, setDotMenuOpen] = useState(false);
@@ -996,6 +1097,14 @@ export default function ForeSecure() {
   const [page, setPage] = useState("home"); // "home" | "alerts" | "service"
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [alertRegionFilter, setAlertRegionFilter] = useState("ALL");
+  const [specialAdvisories, setSpecialAdvisories] = useState([]);
+  const [advisoryModalOpen, setAdvisoryModalOpen] = useState(false);
+  const [advisoryPassword, setAdvisoryPassword] = useState("");
+  const [advisorySubmitting, setAdvisorySubmitting] = useState(false);
+  const [advisoryError, setAdvisoryError] = useState(null);
+  const [advisoryForm, setAdvisoryForm] = useState({
+    title: "", risk: "HIGH", tag: "Crisis", region: "APAC", location: "", source: "", url: "",
+  });
   const [selectedService, setSelectedService] = useState(null);
 
   function handleNavigate(label) {
@@ -1052,6 +1161,47 @@ export default function ForeSecure() {
     const id = setInterval(loadNews, 90 * 1000);
     return () => clearInterval(id);
   }, []);
+
+  // Special Advisories are host/handler-published items, stored server-side
+  // via /api/advisories so every visitor sees the same list — unlike the
+  // scraped news feed above, this one only changes when someone with the
+  // publishing password submits something.
+  function loadAdvisories() {
+    fetch("/api/advisories")
+      .then((res) => res.json())
+      .then((data) => setSpecialAdvisories(Array.isArray(data.items) ? data.items : []))
+      .catch(() => {});
+  }
+
+  useEffect(() => {
+    loadAdvisories();
+  }, []);
+
+  function submitAdvisory(e) {
+    e.preventDefault();
+    setAdvisorySubmitting(true);
+    setAdvisoryError(null);
+    fetch("/api/advisories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...advisoryForm, password: advisoryPassword }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || "Could not publish advisory. Check the password and try again.");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setSpecialAdvisories(Array.isArray(data.items) ? data.items : []);
+        setAdvisoryForm({ title: "", risk: "HIGH", tag: "Crisis", region: "APAC", location: "", source: "", url: "" });
+        setAdvisoryPassword("");
+        setAdvisoryModalOpen(false);
+      })
+      .catch((err) => setAdvisoryError(err.message))
+      .finally(() => setAdvisorySubmitting(false));
+  }
 
   const REGION_ORDER = ["APAC", "INDIA", "EMEA", "AMERICAS"];
   const REGION_LABELS = {
@@ -1329,6 +1479,17 @@ export default function ForeSecure() {
         </div>
       </section>
       <LocationModal data={locationModal} onClose={() => setLocationModal(null)} />
+      <AdvisoryModal
+        open={advisoryModalOpen}
+        form={advisoryForm}
+        setForm={setAdvisoryForm}
+        password={advisoryPassword}
+        setPassword={setAdvisoryPassword}
+        submitting={advisorySubmitting}
+        error={advisoryError}
+        onSubmit={submitAdvisory}
+        onClose={() => { setAdvisoryModalOpen(false); setAdvisoryError(null); }}
+      />
 
       {page === "home" && (
       <>
@@ -1421,8 +1582,60 @@ export default function ForeSecure() {
                     </button>
                   );
                 })}
+                <button
+                  onClick={() => setAlertRegionFilter("SPECIAL")}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    background: alertRegionFilter === "SPECIAL" ? COLORS.gold : "#fff",
+                    color: COLORS.black,
+                    border: `1.5px solid ${alertRegionFilter === "SPECIAL" ? COLORS.gold : COLORS.line}`,
+                    borderRadius: 20, padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  }}
+                >
+                  <Megaphone size={13} />
+                  Special Advisory
+                </button>
               </div>
 
+              {alertRegionFilter === "SPECIAL" ? (
+                <>
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
+                    <button onClick={() => setAdvisoryModalOpen(true)} className="sl-btn-ghost" style={{ fontSize: 13.5 }}>
+                      <Plus size={15} /> Add advisory
+                    </button>
+                  </div>
+                  <div className="sl-grid-4" style={{ marginTop: 16, gridTemplateColumns: "repeat(3, 1fr)" }}>
+                    {specialAdvisories.map((item, i) => (
+                      <Reveal key={item.url || item.title + i} delay={Math.min(i, 8) * 60}>
+                        <button
+                          onClick={() => setSelectedAlert(item)}
+                          className="sl-card"
+                          style={{ display: "block", width: "100%", padding: 22, height: "100%", textAlign: "left", cursor: "pointer", font: "inherit", background: "#fff" }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            <span className="sl-mono" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.03em", color: item.risk === "HIGH" ? "#fff" : COLORS.red, background: item.risk === "HIGH" ? COLORS.red : COLORS.goldLight, padding: "3px 9px", borderRadius: 3 }}>
+                              {item.risk} RISK
+                            </span>
+                            <span className="sl-mono" style={{ fontSize: 11, color: COLORS.red, background: COLORS.goldLight, padding: "3px 9px", borderRadius: 3, fontWeight: 600 }}>{item.tag}</span>
+                            <span className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight }}>{timeAgo(item.publishedAt)}</span>
+                          </div>
+                          <h3 className="sl-display" style={{ fontSize: 16.5, fontWeight: 600, marginTop: 14, lineHeight: 1.4 }}>{item.title}</h3>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 12.5, color: COLORS.slateLight }}>
+                            {item.location ? <MapPin size={14} /> : <Newspaper size={14} />}
+                            {item.location ? item.location.name : item.source}
+                          </div>
+                        </button>
+                      </Reveal>
+                    ))}
+                  </div>
+                  {specialAdvisories.length === 0 && (
+                    <p style={{ fontSize: 13.5, color: COLORS.slateLight, marginTop: 24 }}>
+                      No special advisories published yet.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
               <div className="sl-grid-4" style={{ marginTop: 28, gridTemplateColumns: "repeat(3, 1fr)" }}>
                 {dedupedAlerts
                   .filter((a) => alertRegionFilter === "ALL" || a.region === alertRegionFilter)
@@ -1453,6 +1666,8 @@ export default function ForeSecure() {
                 <p style={{ fontSize: 13.5, color: COLORS.slateLight, marginTop: 24 }}>
                   {newsLoading ? "Loading live alerts…" : "No active high or medium-risk alerts right now."}
                 </p>
+              )}
+                </>
               )}
             </>
           ) : (
