@@ -406,7 +406,7 @@ function WordmarkText({ size = 34 }) {
         <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: size, color: COLORS.gold, lineHeight: 1 }}>Secure</span>
       </div>
       
-      <img src="/images/brand/underline.jpg" alt="" style={{ width: "100%", height:Math.max(3, Math.round(size * 0.2)), display: "block", marginTop: 2 }} />
+      <img src="/images/brand/underline.jpg" alt="" style={{ width: "100%", height: Math.max(3, Math.round(size * 0.2)), display: "block", marginTop: 2 }} />
     </div>
   );
 }
@@ -997,14 +997,18 @@ function AdvisoryModal({ open, form, setForm, password, setPassword, submitting,
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, background: "rgba(20,23,28,0.72)", zIndex: 200,
-        display: "flex", alignItems: "center", justifyContent: "center", padding: 20, overflowY: "auto",
+        display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
       }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ background: "#fff", borderRadius: 14, maxWidth: 520, width: "100%", boxShadow: "0 30px 80px -20px rgba(0,0,0,0.5)" }}
+        style={{
+          background: "#fff", borderRadius: 14, maxWidth: 520, width: "100%",
+          maxHeight: "88vh", display: "flex", flexDirection: "column",
+          boxShadow: "0 30px 80px -20px rgba(0,0,0,0.5)", overflow: "hidden",
+        }}
       >
-        <div style={{ padding: "18px 22px", borderBottom: `1px solid ${COLORS.line}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+        <div style={{ padding: "18px 22px", borderBottom: `1px solid ${COLORS.line}`, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Megaphone size={18} color={COLORS.gold} />
             <h3 className="sl-display" style={{ fontSize: 17, fontWeight: 600, margin: 0 }}>Publish a Special Advisory</h3>
@@ -1014,10 +1018,32 @@ function AdvisoryModal({ open, form, setForm, password, setPassword, submitting,
           </button>
         </div>
 
-        <form onSubmit={onSubmit} style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <form onSubmit={onSubmit} style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 16, overflowY: "auto" }}>
           <div>
             <label style={labelStyle}>Headline</label>
             <input required value={form.title} onChange={set("title")} placeholder="e.g. Curfew declared in central district" style={inputStyle} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Incident overview</label>
+            <textarea
+              value={form.description}
+              onChange={set("description")}
+              placeholder="Full details of what happened, who's affected, and any guidance for personnel…"
+              rows={4}
+              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5, fontFamily: "inherit" }}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Impact analysis</label>
+            <textarea
+              value={form.impact}
+              onChange={set("impact")}
+              placeholder="Likely operational, safety, or business impact — and any recommended response…"
+              rows={4}
+              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5, fontFamily: "inherit" }}
+            />
           </div>
 
           <div style={{ display: "flex", gap: 12 }}>
@@ -1041,12 +1067,40 @@ function AdvisoryModal({ open, form, setForm, password, setPassword, submitting,
 
           <div style={{ display: "flex", gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Tag</label>
-              <input value={form.tag} onChange={set("tag")} placeholder="e.g. Crisis" style={inputStyle} />
+              <label style={labelStyle}>Incident type</label>
+              <input value={form.incidentType} onChange={set("incidentType")} placeholder="e.g. Crisis" style={inputStyle} />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Location name</label>
-              <input value={form.location} onChange={set("location")} placeholder="e.g. Manila, Philippines" style={inputStyle} />
+              <label style={labelStyle}>Date &amp; time</label>
+              <input type="datetime-local" value={form.dateTime} onChange={set("dateTime")} style={inputStyle} />
+            </div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Location</label>
+            <input value={form.location} onChange={set("location")} placeholder="e.g. Manila, Philippines" style={inputStyle} />
+          </div>
+
+          <div style={{ border: `1.5px solid ${COLORS.line}`, borderRadius: 8, padding: 14 }}>
+            <label style={labelStyle}>Mass Communication</label>
+            <div style={{ fontSize: 12, color: COLORS.slateLight, marginBottom: 10 }}>Advised by ForeSecure — send this advisory out to people?</div>
+            <div style={{ display: "flex", gap: 10 }}>
+              {["yes", "no"].map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, massCommunication: opt }))}
+                  style={{
+                    flex: 1, padding: "9px 0", borderRadius: 6, fontSize: 13.5, fontWeight: 600, cursor: "pointer",
+                    textTransform: "capitalize",
+                    background: form.massCommunication === opt ? COLORS.black : "#fff",
+                    color: form.massCommunication === opt ? "#fff" : COLORS.slate,
+                    border: `1.5px solid ${form.massCommunication === opt ? COLORS.black : COLORS.line}`,
+                  }}
+                >
+                  {opt}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -1103,7 +1157,8 @@ export default function ForeSecure() {
   const [advisorySubmitting, setAdvisorySubmitting] = useState(false);
   const [advisoryError, setAdvisoryError] = useState(null);
   const [advisoryForm, setAdvisoryForm] = useState({
-    title: "", risk: "HIGH", tag: "Crisis", region: "APAC", location: "", source: "", url: "",
+    title: "", description: "", impact: "", risk: "HIGH", incidentType: "Crisis", region: "APAC", location: "",
+    dateTime: "", massCommunication: "no", source: "", url: "",
   });
   const [selectedService, setSelectedService] = useState(null);
 
@@ -1195,7 +1250,7 @@ export default function ForeSecure() {
       })
       .then((data) => {
         setSpecialAdvisories(Array.isArray(data.items) ? data.items : []);
-        setAdvisoryForm({ title: "", risk: "HIGH", tag: "Crisis", region: "APAC", location: "", source: "", url: "" });
+        setAdvisoryForm({ title: "", description: "", impact: "", risk: "HIGH", incidentType: "Crisis", region: "APAC", location: "", dateTime: "", massCommunication: "no", source: "", url: "" });
         setAdvisoryPassword("");
         setAdvisoryModalOpen(false);
       })
@@ -1616,7 +1671,7 @@ export default function ForeSecure() {
                             <span className="sl-mono" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.03em", color: item.risk === "HIGH" ? "#fff" : COLORS.red, background: item.risk === "HIGH" ? COLORS.red : COLORS.goldLight, padding: "3px 9px", borderRadius: 3 }}>
                               {item.risk} RISK
                             </span>
-                            <span className="sl-mono" style={{ fontSize: 11, color: COLORS.red, background: COLORS.goldLight, padding: "3px 9px", borderRadius: 3, fontWeight: 600 }}>{item.tag}</span>
+                            <span className="sl-mono" style={{ fontSize: 11, color: COLORS.red, background: COLORS.goldLight, padding: "3px 9px", borderRadius: 3, fontWeight: 600 }}>{item.incidentType}</span>
                             <span className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight }}>{timeAgo(item.publishedAt)}</span>
                           </div>
                           <h3 className="sl-display" style={{ fontSize: 16.5, fontWeight: 600, marginTop: 14, lineHeight: 1.4 }}>{item.title}</h3>
@@ -1710,6 +1765,14 @@ export default function ForeSecure() {
                     <p style={{ fontSize: 14.5, color: COLORS.slate, lineHeight: 1.65 }}>
                       {selectedAlert.description || "No summary was provided by the source. Read the full report for details."}
                     </p>
+                    {selectedAlert.impact && (
+                      <>
+                        <div className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight, textTransform: "uppercase", letterSpacing: "0.04em", marginTop: 22, marginBottom: 10 }}>Impact analysis</div>
+                        <p style={{ fontSize: 14.5, color: COLORS.slate, lineHeight: 1.65 }}>
+                          {selectedAlert.impact}
+                        </p>
+                      </>
+                    )}
                   </div>
 
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
