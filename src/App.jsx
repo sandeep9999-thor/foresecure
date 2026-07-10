@@ -759,15 +759,10 @@ function HeroSlideshow({ slides = heroSlides, intervalMs = 1000, onIndexChange }
   );
 }
 
-const videoCaptions = [
-  { start: 0, end: 2.5, text: "Crisis Management" },
-  { start: 3, end: 6.5, text: "Weather Warnings" },
-  { start: 7, end: 11.5, text: "Civil Unrest" },
-];
-
-function HeroVideo({ src = "/videos/hero.mp4", captions = videoCaptions, onCaptionChange }) {
+// Drop your own hero video file into /public/videos/hero.mp4 (or pass a
+// different `src` below) — that's the only thing you need to change here.
+function HeroVideo({ src = "/videos/hero.mp4" }) {
   const videoRef = useRef(null);
-  const [captionIndex, setCaptionIndex] = useState(-1);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -785,20 +780,7 @@ function HeroVideo({ src = "/videos/hero.mp4", captions = videoCaptions, onCapti
         window.addEventListener("click", retry, { once: true });
       });
     }
-    const handleTimeUpdate = () => {
-      const t = video.currentTime;
-      const idx = captions.findIndex((c) => t >= c.start && t < c.end);
-      setCaptionIndex((prev) => {
-        if (prev !== idx) {
-          if (onCaptionChange) onCaptionChange(idx);
-          return idx;
-        }
-        return prev;
-      });
-    };
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    return () => video.removeEventListener("timeupdate", handleTimeUpdate);
-  }, [captions, onCaptionChange]);
+  }, []);
 
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
@@ -811,29 +793,6 @@ function HeroVideo({ src = "/videos/hero.mp4", captions = videoCaptions, onCapti
         autoPlay
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
       />
-    </div>
-  );
-}
-
-function RotatingLabel({ words, index }) {
-  return (
-    <div style={{ position: "relative", minHeight: 90 }}>
-      {words.map((w, i) => (
-        <h1
-          key={w}
-          className="sl-display"
-          style={{
-            position: "absolute", left: 0, top: 0, margin: 0,
-            fontSize: "clamp(34px, 5.2vw, 64px)", fontWeight: 700, letterSpacing: "-0.02em",
-            color: "#fff", lineHeight: 1.05, textShadow: "0 2px 24px rgba(0,0,0,0.45)",
-            opacity: i === index ? 1 : 0,
-            transform: i === index ? "translateY(0)" : "translateY(10px)",
-            transition: "opacity 0.6s ease, transform 0.6s ease",
-          }}
-        >
-          {w}
-        </h1>
-      ))}
     </div>
   );
 }
@@ -1141,7 +1100,6 @@ export default function ForeSecure() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
-  const [captionIndex, setCaptionIndex] = useState(-1);
   const [liveArticles, setLiveArticles] = useState(null);
   const [regionNews, setRegionNews] = useState(null);
   const [newsError, setNewsError] = useState(null);
@@ -1482,21 +1440,11 @@ export default function ForeSecure() {
 
       {page === "home" && (
       <>
-      {/* HERO — full viewport: nav (above) + slideshow + single tagline. Rest of the page lives below, reached by scrolling. */}
+      {/* HERO — full viewport video (nav sits above it). Drop your own file into
+          /public/videos/hero.mp4, or pass a different src to <HeroVideo src="..." />. */}
       <section style={{ position: "relative", background: COLORS.black, overflow: "hidden", height: "calc(100vh - 73px)", minHeight: 520, display: "flex", alignItems: "flex-end" }}>
-        <HeroVideo onCaptionChange={setCaptionIndex} />
+        <HeroVideo />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(20,23,28,0.15) 0%, rgba(20,23,28,0.75) 100%)" }} />
-        <div style={{ position: "relative", maxWidth: 1160, margin: "0 auto", padding: "0 24px 64px", width: "100%" }}>
-          <Reveal>
-            <RotatingLabel words={videoCaptions.map((c) => c.text)} index={captionIndex} />
-            <button
-              onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }}
-              style={{ marginTop: 22, background: "rgba(255,255,255,0.08)", color: "#fff", border: "1.5px solid rgba(255,255,255,0.25)", borderRadius: 6, padding: "12px 20px", fontWeight: 600, fontSize: 14.5, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}
-            >
-              View Live Alerts <ArrowRight size={15} />
-            </button>
-          </Reveal>
-        </div>
         <div style={{ position: "absolute", bottom: 18, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,0.6)" }}>
           <ChevronDown size={22} />
         </div>
