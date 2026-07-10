@@ -1489,6 +1489,12 @@ export default function ForeSecure() {
         <div style={{ position: "relative", maxWidth: 1160, margin: "0 auto", padding: "0 24px 64px", width: "100%" }}>
           <Reveal>
             <RotatingLabel words={videoCaptions.map((c) => c.text)} index={captionIndex} />
+            <button
+              onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }}
+              style={{ marginTop: 22, background: "rgba(255,255,255,0.08)", color: "#fff", border: "1.5px solid rgba(255,255,255,0.25)", borderRadius: 6, padding: "12px 20px", fontWeight: 600, fontSize: 14.5, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              View Live Alerts <ArrowRight size={15} />
+            </button>
           </Reveal>
         </div>
         <div style={{ position: "absolute", bottom: 18, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,0.6)" }}>
@@ -1851,12 +1857,6 @@ export default function ForeSecure() {
               </p>
               <div style={{ display: "flex", gap: 12, marginTop: 26, flexWrap: "wrap" }}>
                 <button className="sl-btn-primary">Request a briefing <ArrowRight size={15} /></button>
-                <button
-                  onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }}
-                  style={{ background: "rgba(255,255,255,0.06)", color: "#fff", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 6, padding: "12px 20px", fontWeight: 600, fontSize: 14.5, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}
-                >
-                  View Live Alerts
-                </button>
               </div>
             </Reveal>
           </div>
