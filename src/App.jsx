@@ -1239,33 +1239,6 @@ export default function ForeSecure() {
     return `${Math.floor(hours / 24)}d ago`;
   }
 
-  // Feed the scrolling ticker from live /api/news results once they've loaded;
-  // fall back to the placeholder feed while loading or if the request failed.
-  // Capped to a fixed count and given a duration proportional to that count so
-  // the scroll speed stays readable regardless of how many live items come back.
-  const tickerSource =
-    liveArticles && liveArticles.length > 0
-      ? liveArticles.slice(0, 10).map((a) => ({
-          level: tagToLevel(a.tag),
-          loc: a.location ? a.location.name : a.source,
-          type: a.title,
-          timeLabel: a.publishedAt ? timeAgo(a.publishedAt) : "",
-          url: a.url,
-          location: a.location,
-          source: a.source,
-        }))
-      : tickerFeed.map((item) => ({
-          level: item.level,
-          loc: item.loc,
-          type: item.type,
-          timeLabel: `${item.t} ago`,
-          url: null,
-          location: null,
-          source: null,
-        }));
-  const tickerData = tickerSource;
-  const tickerDuration = Math.max(28, tickerData.length * 6);
-
   // Flatten every region's alerts into one deduped, most-recent-first list
   // for the Live Alerts page.
   const dedupedAlerts = (() => {
@@ -1452,39 +1425,17 @@ export default function ForeSecure() {
       </>
       )}
 
-      {/* TICKER — signature element, driven by live /api/news when available; shown on both pages */}
+      {/* TICKER — signature element, now a simple scrolling brand statement */}
       <section style={{ background: COLORS.black, padding: "16px 0", overflow: "hidden", borderTop: "1px solid #24272E" }}>
-        <div className="sl-ticker-track" style={{ animationDuration: `${tickerDuration}s` }}>
-          {[...tickerData, ...tickerData].map((item, i) => {
-            const clickable = Boolean(item.url);
-            return (
-              <button
-                key={i}
-                onClick={() => clickable && setLocationModal({
-                  title: item.type,
-                  url: item.url,
-                  source: item.source,
-                  location: item.location,
-                  publishedAt: null,
-                })}
-                style={{
-                  display: "flex", alignItems: "center", gap: 10, padding: "0 28px",
-                  borderRight: "1px solid #2A2E36", whiteSpace: "nowrap",
-                  textDecoration: "none", cursor: clickable ? "pointer" : "default",
-                  background: "none", border: "none", borderRightWidth: 1, borderRightColor: "#2A2E36", borderRightStyle: "solid",
-                  font: "inherit", textAlign: "left",
-                }}
-              >
-                <span className="sl-mono" style={{ fontSize: 11, fontWeight: 600, color: item.level === "WARNING" ? "#F0A8A8" : item.level === "WATCH" ? "#EBCE8A" : "#B9BCC2", background: "rgba(255,255,255,0.06)", padding: "3px 8px", borderRadius: 3 }}>
-                  {item.level}
-                </span>
-                <MapPin size={13} color="#7A7E86" />
-                <span className="sl-mono" style={{ fontSize: 13, color: "#DAD8D0" }}>{item.loc}</span>
-                <span style={{ fontSize: 13, color: "#9A9DA3", maxWidth: 420, overflow: "hidden", textOverflow: "ellipsis" }}>{item.type}</span>
-                <span className="sl-mono" style={{ fontSize: 11.5, color: "#63666D" }}>{item.timeLabel}</span>
-              </button>
-            );
-          })}
+        <div className="sl-ticker-track" style={{ animationDuration: "22s" }}>
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 28px", borderRight: "1px solid #2A2E36", whiteSpace: "nowrap" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.gold, flexShrink: 0 }} />
+              <span className="sl-display" style={{ fontSize: 15, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#EDEBE4" }}>
+                Advanced Technology
+              </span>
+            </div>
+          ))}
         </div>
       </section>
       <LocationModal data={locationModal} onClose={() => setLocationModal(null)} />
