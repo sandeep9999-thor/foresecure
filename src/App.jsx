@@ -23,6 +23,12 @@ const COLORS = {
   line: "#E4E1D8",
 };
 
+const briefingInputStyle = {
+  display: "block", width: "100%", marginTop: 8, padding: "9px 2px", border: "none",
+  borderBottom: `1.5px solid ${COLORS.line}`, fontSize: 14.5, fontFamily: "inherit",
+  color: COLORS.black, background: "transparent", outline: "none",
+};
+
 const tickerFeed = [
   { level: "WARNING", loc: "Manila, PH", type: "Typhoon track shift", t: "00:12" },
   { level: "WATCH", loc: "Lagos, NG", type: "Civil demonstration planned", t: "00:47" },
@@ -797,7 +803,7 @@ function HeroVideo({ src = "/videos/hero.mp4" }) {
   );
 }
 
-function FullScreenMenu({ open, onClose, onNavigate }) {
+function FullScreenMenu({ open, onClose, onNavigate, onRequestBriefing }) {
   const [expanded, setExpanded] = useState(null);
 
   function handleLeafClick(label) {
@@ -864,7 +870,7 @@ function FullScreenMenu({ open, onClose, onNavigate }) {
         })}
       </div>
       <div style={{ padding: 28, borderTop: `1px solid ${COLORS.line}` }}>
-        <button className="sl-btn-primary" style={{ width: "100%", justifyContent: "center" }} onClick={onClose}>
+        <button className="sl-btn-primary" style={{ width: "100%", justifyContent: "center" }} onClick={() => { onRequestBriefing(); onClose(); }}>
           Request briefing <ArrowRight size={15} />
         </button>
       </div>
@@ -1163,7 +1169,7 @@ export default function ForeSecure() {
   const [newsLoading, setNewsLoading] = useState(false);
   const [newsUpdatedAt, setNewsUpdatedAt] = useState(null);
   const [locationModal, setLocationModal] = useState(null);
-  const [page, setPage] = useState("home"); // "home" | "alerts" | "service"
+  const [page, setPage] = useState("home"); // "home" | "alerts" | "service" | "briefing" | "leads"
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [alertRegionFilter, setAlertRegionFilter] = useState("ALL");
   const [specialAdvisories, setSpecialAdvisories] = useState([]);
@@ -1179,6 +1185,16 @@ export default function ForeSecure() {
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [briefingForm, setBriefingForm] = useState({
+    firstName: "", lastName: "", phone: "", email: "", organization: "", designation: "", message: "", website: "",
+  });
+  const [briefingSubmitting, setBriefingSubmitting] = useState(false);
+  const [briefingError, setBriefingError] = useState(null);
+  const [briefingSubmitted, setBriefingSubmitted] = useState(false);
+  const [leadsPassword, setLeadsPassword] = useState("");
+  const [leadsItems, setLeadsItems] = useState(null);
+  const [leadsLoading, setLeadsLoading] = useState(false);
+  const [leadsError, setLeadsError] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
 
   function handleNavigate(label) {
@@ -1301,6 +1317,56 @@ export default function ForeSecure() {
       })
       .catch((err) => setDeleteError(err.message))
       .finally(() => setDeleteSubmitting(false));
+  }
+
+  function handleGoToBriefing() {
+    setPage("briefing");
+    setSelectedService(null);
+    setSelectedAlert(null);
+    setBriefingSubmitted(false);
+    setBriefingError(null);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
+
+  function submitBriefing(e) {
+    e.preventDefault();
+    setBriefingSubmitting(true);
+    setBriefingError(null);
+    fetch("/api/briefing-requests", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(briefingForm),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || "Could not submit your request. Please try again.");
+        }
+        return res.json();
+      })
+      .then(() => {
+        setBriefingSubmitted(true);
+        setBriefingForm({ firstName: "", lastName: "", phone: "", email: "", organization: "", designation: "", message: "", website: "" });
+      })
+      .catch((err) => setBriefingError(err.message))
+      .finally(() => setBriefingSubmitting(false));
+  }
+
+  function fetchLeads(e) {
+    e.preventDefault();
+    setLeadsLoading(true);
+    setLeadsError(null);
+    fetch(`/api/briefing-requests?password=${encodeURIComponent(leadsPassword)}`)
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || "Could not load requests.");
+        }
+        return res.json();
+      })
+      .then((data) => setLeadsItems(Array.isArray(data.items) ? data.items : []))
+      .catch((err) => setLeadsError(err.message))
+      .finally(() => setLeadsLoading(false));
   }
 
   const REGION_ORDER = ["APAC", "INDIA", "EMEA", "AMERICAS"];
@@ -1496,7 +1562,7 @@ export default function ForeSecure() {
           </div>
         )}
       </header>
-      <FullScreenMenu open={dotMenuOpen} onClose={() => setDotMenuOpen(false)} onNavigate={handleNavigate} />
+      <FullScreenMenu open={dotMenuOpen} onClose={() => setDotMenuOpen(false)} onNavigate={handleNavigate} onRequestBriefing={handleGoToBriefing} />
 
       {page === "home" && (
       <>
@@ -1861,7 +1927,7 @@ export default function ForeSecure() {
                 {SERVICE_CONTENT[selectedService].summary}
               </p>
               <div style={{ display: "flex", gap: 12, marginTop: 26, flexWrap: "wrap" }}>
-                <button className="sl-btn-primary">Request a briefing <ArrowRight size={15} /></button>
+                <button className="sl-btn-primary" onClick={handleGoToBriefing}>Request a briefing <ArrowRight size={15} /></button>
               </div>
             </Reveal>
           </div>
@@ -1928,11 +1994,193 @@ export default function ForeSecure() {
                   A member of our team can walk through what this looks like for your organization specifically.
                 </p>
               </div>
-              <button className="sl-btn-primary" style={{ flexShrink: 0 }}>Request a briefing <ArrowRight size={15} /></button>
+              <button className="sl-btn-primary" style={{ flexShrink: 0 }} onClick={handleGoToBriefing}>Request a briefing <ArrowRight size={15} /></button>
             </div>
           </Reveal>
         </section>
         </>
+      )}
+
+      {/* REQUEST A BRIEFING PAGE */}
+      {page === "briefing" && (
+        <section style={{ maxWidth: 1160, margin: "0 auto", padding: "48px 24px 100px" }}>
+          <button
+            onClick={() => { setPage("home"); }}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", color: COLORS.slate, fontSize: 14, fontWeight: 600, padding: 0, marginBottom: 28, font: "inherit" }}
+          >
+            <ArrowRight size={16} style={{ transform: "rotate(180deg)" }} /> Back
+          </button>
+
+          <div className="sl-split-view sl-card" style={{ overflow: "hidden" }}>
+            {/* LEFT — the form */}
+            <div style={{ padding: "40px 40px" }}>
+              <Reveal>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 26, height: 1.5, background: COLORS.slateLight }} />
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: COLORS.gold }} />
+                  <span className="sl-mono" style={{ fontSize: 12, color: COLORS.slateLight, letterSpacing: "0.05em", textTransform: "uppercase" }}>Get in touch</span>
+                </div>
+                <h1 className="sl-display" style={{ fontSize: "clamp(26px, 3vw, 34px)", fontWeight: 700, letterSpacing: "-0.01em", marginTop: 14 }}>
+                  Request a briefing
+                </h1>
+                <p style={{ fontSize: 14.5, color: COLORS.slate, marginTop: 10, lineHeight: 1.6 }}>
+                  Tell us a bit about your organization and what you need — someone from our team will follow up directly.
+                </p>
+              </Reveal>
+
+              {briefingSubmitted ? (
+                <Reveal delay={100}>
+                  <div style={{ marginTop: 32, padding: 20, borderRadius: 8, background: COLORS.goldLight, display: "flex", alignItems: "flex-start", gap: 12 }}>
+                    <CheckCircle2 size={20} color={COLORS.gold} style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 15 }}>Request received.</div>
+                      <div style={{ fontSize: 13.5, color: COLORS.slate, marginTop: 4, lineHeight: 1.5 }}>
+                        Thanks for reaching out — a member of our team will be in touch shortly.
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={() => setBriefingSubmitted(false)} className="sl-btn-ghost" style={{ marginTop: 20, fontSize: 13.5 }}>
+                    Submit another request
+                  </button>
+                </Reveal>
+              ) : (
+                <Reveal delay={100}>
+                  <form onSubmit={submitBriefing} style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 20 }}>
+                    {/* Honeypot — invisible to real visitors, but a bot filling every field will
+                        trip it, letting us silently reject the submission server-side. */}
+                    <input
+                      type="text"
+                      name="website"
+                      value={briefingForm.website}
+                      onChange={(e) => setBriefingForm((f) => ({ ...f, website: e.target.value }))}
+                      tabIndex={-1}
+                      autoComplete="off"
+                      style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+                      aria-hidden="true"
+                    />
+
+                    <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+                      <label style={{ flex: "1 1 200px", fontSize: 13, color: COLORS.slate }}>
+                        First Name*
+                        <input required value={briefingForm.firstName} onChange={(e) => setBriefingForm((f) => ({ ...f, firstName: e.target.value }))} style={briefingInputStyle} />
+                      </label>
+                      <label style={{ flex: "1 1 200px", fontSize: 13, color: COLORS.slate }}>
+                        Last Name*
+                        <input required value={briefingForm.lastName} onChange={(e) => setBriefingForm((f) => ({ ...f, lastName: e.target.value }))} style={briefingInputStyle} />
+                      </label>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+                      <label style={{ flex: "1 1 200px", fontSize: 13, color: COLORS.slate }}>
+                        Your Number*
+                        <input required type="tel" value={briefingForm.phone} onChange={(e) => setBriefingForm((f) => ({ ...f, phone: e.target.value }))} style={briefingInputStyle} />
+                      </label>
+                      <label style={{ flex: "1 1 200px", fontSize: 13, color: COLORS.slate }}>
+                        Your Email*
+                        <input required type="email" value={briefingForm.email} onChange={(e) => setBriefingForm((f) => ({ ...f, email: e.target.value }))} style={briefingInputStyle} />
+                      </label>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+                      <label style={{ flex: "1 1 200px", fontSize: 13, color: COLORS.slate }}>
+                        Organization Name*
+                        <input required value={briefingForm.organization} onChange={(e) => setBriefingForm((f) => ({ ...f, organization: e.target.value }))} style={briefingInputStyle} />
+                      </label>
+                      <label style={{ flex: "1 1 200px", fontSize: 13, color: COLORS.slate }}>
+                        Your Designation*
+                        <input required value={briefingForm.designation} onChange={(e) => setBriefingForm((f) => ({ ...f, designation: e.target.value }))} style={briefingInputStyle} />
+                      </label>
+                    </div>
+
+                    <label style={{ fontSize: 13, color: COLORS.slate }}>
+                      Additional Message
+                      <textarea
+                        rows={4}
+                        value={briefingForm.message}
+                        onChange={(e) => setBriefingForm((f) => ({ ...f, message: e.target.value }))}
+                        style={{ ...briefingInputStyle, resize: "vertical", fontFamily: "inherit" }}
+                      />
+                    </label>
+
+                    {briefingError && <div style={{ fontSize: 13, color: COLORS.red }}>{briefingError}</div>}
+
+                    <button type="submit" disabled={briefingSubmitting} className="sl-btn-primary" style={{ justifyContent: "center", opacity: briefingSubmitting ? 0.7 : 1, marginTop: 8 }}>
+                      {briefingSubmitting ? "Sending…" : "Send request"} <ArrowRight size={15} />
+                    </button>
+                  </form>
+                </Reveal>
+              )}
+            </div>
+
+            {/* RIGHT — branded panel */}
+            <div style={{ position: "relative", background: COLORS.black, overflow: "hidden", minHeight: 420, display: "flex", alignItems: "flex-end" }}>
+              <div style={{ position: "absolute", inset: 0, opacity: 0.55 }}>
+                <MapIllustration />
+              </div>
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(20,23,28,0.2) 0%, rgba(20,23,28,0.85) 100%)" }} />
+              <div style={{ position: "relative", padding: "40px" }}>
+                <div className="sl-mono" style={{ fontSize: 12, color: COLORS.gold, letterSpacing: "0.05em", textTransform: "uppercase" }}>Say hello</div>
+                <h2 className="sl-display" style={{ color: "#fff", fontSize: 26, fontWeight: 700, marginTop: 10 }}>
+                  Real analysts. Real answers.
+                </h2>
+                <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 14, marginTop: 12, lineHeight: 1.6, maxWidth: 340 }}>
+                  Every request goes to a real member of our team — no ticket queue, no chatbot. We'll follow up directly at the number or email you give us.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* INTERNAL: BRIEFING REQUESTS VIEWER — password-gated, not linked from
+          the main nav. Reachable via the small "Team" link in the footer. */}
+      {page === "leads" && (
+        <section style={{ maxWidth: 900, margin: "0 auto", padding: "48px 24px 100px" }}>
+          <button
+            onClick={() => setPage("home")}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", color: COLORS.slate, fontSize: 14, fontWeight: 600, padding: 0, marginBottom: 28, font: "inherit" }}
+          >
+            <ArrowRight size={16} style={{ transform: "rotate(180deg)" }} /> Back
+          </button>
+
+          <h1 className="sl-display" style={{ fontSize: 26, fontWeight: 700 }}>Briefing requests</h1>
+          <p style={{ fontSize: 13.5, color: COLORS.slateLight, marginTop: 8 }}>Internal only — same password as Special Advisory publishing.</p>
+
+          {leadsItems === null ? (
+            <form onSubmit={fetchLeads} style={{ marginTop: 24, display: "flex", gap: 10, maxWidth: 380 }}>
+              <input
+                type="password"
+                required
+                value={leadsPassword}
+                onChange={(e) => setLeadsPassword(e.target.value)}
+                placeholder="Password"
+                style={{ flex: 1, padding: "10px 12px", borderRadius: 6, border: `1.5px solid ${COLORS.line}`, fontSize: 14, fontFamily: "inherit" }}
+              />
+              <button type="submit" disabled={leadsLoading} className="sl-btn-primary" style={{ opacity: leadsLoading ? 0.7 : 1 }}>
+                {leadsLoading ? "Checking…" : "View"}
+              </button>
+            </form>
+          ) : (
+            <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+              {leadsItems.length === 0 && <p style={{ fontSize: 13.5, color: COLORS.slateLight }}>No briefing requests yet.</p>}
+              {leadsItems.map((lead) => (
+                <div key={lead.id} className="sl-card" style={{ padding: 18 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ fontWeight: 600, fontSize: 15 }}>{lead.firstName} {lead.lastName}</div>
+                    <div className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight }}>{timeAgo(lead.submittedAt)}</div>
+                  </div>
+                  <div style={{ fontSize: 13.5, color: COLORS.slate, marginTop: 6 }}>{lead.designation} at {lead.organization}</div>
+                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 10, fontSize: 13 }}>
+                    <a href={`mailto:${lead.email}`} style={{ color: COLORS.red, fontWeight: 600 }}>{lead.email}</a>
+                    <a href={`tel:${lead.phone}`} style={{ color: COLORS.slate }}>{lead.phone}</a>
+                  </div>
+                  {lead.message && <p style={{ fontSize: 13.5, color: COLORS.slate, marginTop: 10, lineHeight: 1.5 }}>{lead.message}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+          {leadsError && <div style={{ fontSize: 13, color: COLORS.red, marginTop: 14 }}>{leadsError}</div>}
+        </section>
       )}
 
       {/* NEWSLETTER */}
@@ -1973,6 +2221,13 @@ export default function ForeSecure() {
             )}
           </div>
         </Reveal>
+        <Reveal delay={100}>
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 28 }}>
+            <button onClick={handleGoToBriefing} className="sl-btn-ghost">
+              Get in touch <ArrowRight size={15} />
+            </button>
+          </div>
+        </Reveal>
       </section>
       )}
 
@@ -2011,8 +2266,16 @@ export default function ForeSecure() {
           ))}
         </div>
 
-        <div style={{ marginTop: 32, fontSize: 12.5, color: COLORS.slateLight, display: "flex", gap: 16, alignItems: "center" }}>
-          <Globe2 size={14} /> ForeSecure is a demonstration brand — content generated for demonstration purposes.
+        <div style={{ marginTop: 32, fontSize: 12.5, color: COLORS.slateLight, display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Globe2 size={14} /> ForeSecure is a demonstration brand — content generated for demonstration purposes.
+          </span>
+          <button
+            onClick={() => setPage("leads")}
+            style={{ background: "none", border: "none", cursor: "pointer", font: "inherit", fontSize: 12.5, color: COLORS.slateLight, padding: 0, textDecoration: "underline", textUnderlineOffset: 2 }}
+          >
+            Team
+          </button>
         </div>
       </footer>
     </div>
