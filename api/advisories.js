@@ -14,6 +14,7 @@
 //   4. Redeploy
 
 import { Redis } from "@upstash/redis";
+import { randomUUID } from "crypto";
 
 const redis = new Redis({
   url: process.env.KV_REST_API_URL,
@@ -49,6 +50,7 @@ export default async function handler(req, res) {
     const publishedAt = isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString();
 
     const newItem = {
+      id: randomUUID(),
       title: title.trim(),
       description: (description || "").trim() || null,
       impact: (impact || "").trim() || null,
@@ -69,6 +71,26 @@ export default async function handler(req, res) {
     return res.status(200).json({ items: updated });
   }
 
-  res.setHeader("Allow", "GET, POST");
+  if (req.method === "DELETE") {
+    const { password, id } = req.body || {};
+
+    if (!process.env.ADVISORY_PASSWORD) {
+      return res.status(500).json({ error: "Deletion isn't configured yet — ADVISORY_PASSWORD is missing." });
+    }
+    if (!password || password !== process.env.ADVISORY_PASSWORD) {
+      return res.status(401).json({ error: "Incorrect password." });
+    }
+    if (!id) {
+      return res.status(400).json({ error: "Missing advisory id." });
+    }
+
+    const existing = (await redis.get(KEY)) || [];
+    const updated = existing.filter((item) => item.id !== id);
+    await redis.set(KEY, updated);
+
+    return res.status(200).json({ items: updated });
+  }
+
+  res.setHeader("Allow", "GET, POST, DELETE");
   return res.status(405).json({ error: "Method not allowed." });
 }

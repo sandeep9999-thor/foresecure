@@ -4,7 +4,7 @@ import {
   MapPin, Clock, CheckCircle2, Menu, X, Mail, Bell, Activity,
   Globe2, Lock, Building2, Newspaper, ArrowUpRight,
   MoreHorizontal, ChevronRight, ChevronDown, RefreshCw, MapPinned, ExternalLink,
-  Image as ImageIcon, Flag, Megaphone, Plus
+  Image as ImageIcon, Flag, Megaphone, Plus, Trash2
 } from "lucide-react";
 
 const FONT_IMPORT_URL =
@@ -1092,6 +1092,63 @@ function AdvisoryModal({ open, form, setForm, password, setPassword, submitting,
   );
 }
 
+// Small password-gated confirmation for removing a Special Advisory —
+// same server-side password check as publishing, via DELETE /api/advisories.
+function DeleteAdvisoryModal({ target, password, setPassword, submitting, error, onConfirm, onClose }) {
+  if (!target) return null;
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, background: "rgba(20,23,28,0.72)", zIndex: 210,
+        display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ background: "#fff", borderRadius: 14, maxWidth: 420, width: "100%", boxShadow: "0 30px 80px -20px rgba(0,0,0,0.5)", padding: "22px" }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Trash2 size={18} color={COLORS.red} />
+          <h3 className="sl-display" style={{ fontSize: 16.5, fontWeight: 600, margin: 0 }}>Delete this advisory?</h3>
+        </div>
+        <p style={{ fontSize: 13.5, color: COLORS.slate, marginTop: 12, lineHeight: 1.5 }}>
+          "{target.title}" will be permanently removed for all visitors. This can't be undone.
+        </p>
+        <div style={{ marginTop: 16 }}>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: COLORS.slate, marginBottom: 6 }}>
+            <Lock size={12} style={{ verticalAlign: -1, marginRight: 5 }} />
+            Password
+          </label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Only for authorized team members"
+            style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: `1.5px solid ${COLORS.line}`, fontSize: 14, fontFamily: "inherit" }}
+          />
+        </div>
+        {error && <div style={{ fontSize: 13, color: COLORS.red, marginTop: 10 }}>{error}</div>}
+        <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+          <button
+            onClick={onClose}
+            style={{ flex: 1, padding: "10px 0", borderRadius: 6, fontSize: 13.5, fontWeight: 600, cursor: "pointer", background: "#fff", color: COLORS.slate, border: `1.5px solid ${COLORS.line}` }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={submitting}
+            style={{ flex: 1, padding: "10px 0", borderRadius: 6, fontSize: 13.5, fontWeight: 600, cursor: "pointer", background: COLORS.red, color: "#fff", border: `1.5px solid ${COLORS.red}`, opacity: submitting ? 0.7 : 1 }}
+          >
+            {submitting ? "Deleting…" : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ForeSecure() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dotMenuOpen, setDotMenuOpen] = useState(false);
@@ -1118,6 +1175,10 @@ export default function ForeSecure() {
     title: "", description: "", impact: "", risk: "HIGH", incidentType: "Crisis", region: "APAC", location: "",
     dateTime: "", massCommunication: "no", source: "", url: "",
   });
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
 
   function handleNavigate(label) {
@@ -1214,6 +1275,32 @@ export default function ForeSecure() {
       })
       .catch((err) => setAdvisoryError(err.message))
       .finally(() => setAdvisorySubmitting(false));
+  }
+
+  function deleteAdvisory() {
+    if (!deleteTarget) return;
+    setDeleteSubmitting(true);
+    setDeleteError(null);
+    fetch("/api/advisories", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: deleteTarget.id, password: deletePassword }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || "Could not delete advisory. Check the password and try again.");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setSpecialAdvisories(Array.isArray(data.items) ? data.items : []);
+        setDeleteTarget(null);
+        setDeletePassword("");
+        if (selectedAlert && selectedAlert.id === deleteTarget.id) setSelectedAlert(null);
+      })
+      .catch((err) => setDeleteError(err.message))
+      .finally(() => setDeleteSubmitting(false));
   }
 
   const REGION_ORDER = ["APAC", "INDIA", "EMEA", "AMERICAS"];
@@ -1450,6 +1537,15 @@ export default function ForeSecure() {
         onSubmit={submitAdvisory}
         onClose={() => { setAdvisoryModalOpen(false); setAdvisoryError(null); }}
       />
+      <DeleteAdvisoryModal
+        target={deleteTarget}
+        password={deletePassword}
+        setPassword={setDeletePassword}
+        submitting={deleteSubmitting}
+        error={deleteError}
+        onConfirm={deleteAdvisory}
+        onClose={() => { setDeleteTarget(null); setDeleteError(null); }}
+      />
 
       {page === "home" && (
       <>
@@ -1566,25 +1662,35 @@ export default function ForeSecure() {
                   </div>
                   <div className="sl-grid-4" style={{ marginTop: 16, gridTemplateColumns: "repeat(3, 1fr)" }}>
                     {specialAdvisories.map((item, i) => (
-                      <Reveal key={item.url || item.title + i} delay={Math.min(i, 8) * 60}>
-                        <button
-                          onClick={() => setSelectedAlert(item)}
-                          className="sl-card"
-                          style={{ display: "block", width: "100%", padding: 22, height: "100%", textAlign: "left", cursor: "pointer", font: "inherit", background: "#fff" }}
-                        >
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                            <span className="sl-mono" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.03em", color: item.risk === "HIGH" ? "#fff" : COLORS.red, background: item.risk === "HIGH" ? COLORS.red : COLORS.goldLight, padding: "3px 9px", borderRadius: 3 }}>
-                              {item.risk} RISK
-                            </span>
-                            <span className="sl-mono" style={{ fontSize: 11, color: COLORS.red, background: COLORS.goldLight, padding: "3px 9px", borderRadius: 3, fontWeight: 600 }}>{item.incidentType}</span>
-                            <span className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight }}>{timeAgo(item.publishedAt)}</span>
-                          </div>
-                          <h3 className="sl-display" style={{ fontSize: 16.5, fontWeight: 600, marginTop: 14, lineHeight: 1.4 }}>{item.title}</h3>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 12.5, color: COLORS.slateLight }}>
-                            {item.location ? <MapPin size={14} /> : <Newspaper size={14} />}
-                            {item.location ? item.location.name : item.source}
-                          </div>
-                        </button>
+                      <Reveal key={item.id || item.url || item.title + i} delay={Math.min(i, 8) * 60}>
+                        <div style={{ position: "relative" }}>
+                          <button
+                            onClick={() => setSelectedAlert(item)}
+                            className="sl-card"
+                            style={{ display: "block", width: "100%", padding: 22, height: "100%", textAlign: "left", cursor: "pointer", font: "inherit", background: "#fff" }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", paddingRight: 26 }}>
+                              <span className="sl-mono" style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.03em", color: item.risk === "HIGH" ? "#fff" : COLORS.red, background: item.risk === "HIGH" ? COLORS.red : COLORS.goldLight, padding: "3px 9px", borderRadius: 3 }}>
+                                {item.risk} RISK
+                              </span>
+                              <span className="sl-mono" style={{ fontSize: 11, color: COLORS.red, background: COLORS.goldLight, padding: "3px 9px", borderRadius: 3, fontWeight: 600 }}>{item.incidentType}</span>
+                              <span className="sl-mono" style={{ fontSize: 11.5, color: COLORS.slateLight }}>{timeAgo(item.publishedAt)}</span>
+                            </div>
+                            <h3 className="sl-display" style={{ fontSize: 16.5, fontWeight: 600, marginTop: 14, lineHeight: 1.4 }}>{item.title}</h3>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 12.5, color: COLORS.slateLight }}>
+                              {item.location ? <MapPin size={14} /> : <Newspaper size={14} />}
+                              {item.location ? item.location.name : item.source}
+                            </div>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDeleteError(null); setDeletePassword(""); setDeleteTarget(item); }}
+                            title="Delete advisory"
+                            aria-label="Delete advisory"
+                            style={{ position: "absolute", top: 14, right: 14, background: "#fff", border: `1px solid ${COLORS.line}`, borderRadius: 6, padding: 6, cursor: "pointer", display: "flex" }}
+                          >
+                            <Trash2 size={13} color={COLORS.slateLight} />
+                          </button>
+                        </div>
                       </Reveal>
                     ))}
                   </div>
