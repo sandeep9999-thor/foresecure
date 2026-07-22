@@ -370,6 +370,12 @@ function useReveal() {
   return [ref, visible];
 }
 
+// Premium easing curve used across every motion primitive below —
+// a slow-start, confident-finish curve that reads as "designed" rather
+// than a default ease. Kept as one constant so every animation in the
+// site feels like it belongs to the same system.
+const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+
 function Reveal({ children, delay = 0, style = {} }) {
   const [ref, visible] = useReveal();
   return (
@@ -377,13 +383,132 @@ function Reveal({ children, delay = 0, style = {} }) {
       ref={ref}
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(18px)",
-        transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
+        transform: visible ? "translateY(0) scale(1)" : "translateY(28px) scale(0.98)",
+        filter: visible ? "blur(0px)" : "blur(6px)",
+        transition: `opacity 0.9s ${EASE} ${delay}ms, transform 0.9s ${EASE} ${delay}ms, filter 0.9s ${EASE} ${delay}ms`,
+        willChange: "transform, opacity, filter",
         ...style,
       }}
     >
       {children}
     </div>
+  );
+}
+
+// ---- Kinetic headline: splits text into words, each animated in on a
+// staggered delay as it enters the viewport. This is the "text animates
+// as you scroll" effect — every headline built with this reads like it's
+// assembling itself in front of the reader instead of just fading in. ----
+function KineticHeadline({ text, as: Tag = "h1", className = "", style = {}, wordDelay = 55, startDelay = 0 }) {
+  const [ref, visible] = useReveal();
+  const words = String(text).split(" ");
+  return (
+    <Tag ref={ref} className={className} style={{ ...style }}>
+      {words.map((w, i) => (
+        <span
+          key={i}
+          style={{
+            display: "inline-block",
+            overflow: "hidden",
+            verticalAlign: "top",
+            marginRight: "0.28em",
+          }}
+        >
+          <span
+            style={{
+              display: "inline-block",
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateY(0%) rotate(0deg)" : "translateY(115%) rotate(4deg)",
+              transition: `transform 0.85s ${EASE} ${startDelay + i * wordDelay}ms, opacity 0.6s ${EASE} ${startDelay + i * wordDelay}ms`,
+              willChange: "transform, opacity",
+            }}
+          >
+            {w}
+          </span>
+        </span>
+      ))}
+    </Tag>
+  );
+}
+
+// ---- Magnetic wrapper: the element gently follows the cursor within a
+// small radius, then eases back to rest when the pointer leaves — the
+// "shines and gets bigger, then settles" interaction. Wrap any button or
+// icon in this to give it that premium, tactile pull. ----
+function Magnetic({ children, strength = 18, className = "", style = {} }) {
+  const ref = useRef(null);
+
+  function handleMove(e) {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - (rect.left + rect.width / 2);
+    const y = e.clientY - (rect.top + rect.height / 2);
+    el.style.transform = `translate(${(x / rect.width) * strength}px, ${(y / rect.height) * strength}px) scale(1.045)`;
+  }
+  function handleLeave() {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = "translate(0px, 0px) scale(1)";
+  }
+
+  return (
+    <div
+      ref={ref}
+      onMouseMove={handleMove}
+      onMouseLeave={handleLeave}
+      className={className}
+      style={{
+        display: "inline-flex",
+        transition: `transform 0.45s ${EASE}`,
+        willChange: "transform",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ---- Soft radial spotlight that trails the cursor across the whole page.
+// Purely additive/decorative (pointer-events: none), and disabled on touch
+// devices automatically since it only ever receives mousemove events. ----
+function CursorGlow() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let raf = null;
+    let tx = 0, ty = 0, cx = 0, cy = 0;
+    function onMove(e) {
+      tx = e.clientX;
+      ty = e.clientY;
+      if (!raf) raf = requestAnimationFrame(tick);
+    }
+    function tick() {
+      cx += (tx - cx) * 0.16;
+      cy += (ty - cy) * 0.16;
+      el.style.transform = `translate(${cx}px, ${cy}px)`;
+      if (Math.abs(tx - cx) > 0.3 || Math.abs(ty - cy) > 0.3) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        raf = null;
+      }
+    }
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => { window.removeEventListener("mousemove", onMove); if (raf) cancelAnimationFrame(raf); };
+  }, []);
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      style={{
+        position: "fixed", top: 0, left: 0, width: 420, height: 420,
+        marginLeft: -210, marginTop: -210, borderRadius: "50%", pointerEvents: "none", zIndex: 2,
+        background: `radial-gradient(circle, ${COLORS.gold}14 0%, transparent 70%)`,
+        mixBlendMode: "multiply",
+      }}
+    />
   );
 }
 
@@ -1163,6 +1288,16 @@ export default function ForeSecure() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
+  const [scrollY, setScrollY] = useState(0);
+  useEffect(() => {
+    let raf = null;
+    function onScroll() {
+      if (raf) return;
+      raf = requestAnimationFrame(() => { setScrollY(window.scrollY); raf = null; });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const [liveArticles, setLiveArticles] = useState(null);
   const [regionNews, setRegionNews] = useState(null);
   const [newsError, setNewsError] = useState(null);
@@ -1408,30 +1543,61 @@ export default function ForeSecure() {
 
   return (
     <div style={{ background: COLORS.bg, color: COLORS.black, fontFamily: "'Inter', sans-serif", minHeight: "100vh" }}>
+      <CursorGlow />
       <style>{`
         @import url('${FONT_IMPORT_URL}');
         .sl-display { font-family: 'Space Grotesk', sans-serif; }
         .sl-mono { font-family: 'IBM Plex Mono', monospace; }
         .sl-btn-primary {
+          position: relative; overflow: hidden; isolation: isolate;
           background: ${COLORS.red}; color: #fff; border: none; border-radius: 6px;
           padding: 13px 22px; font-weight: 600; font-size: 14.5px; cursor: pointer;
-          display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s ease, transform 0.15s ease;
+          display: inline-flex; align-items: center; gap: 8px;
+          transition: background 0.35s ${EASE}, transform 0.35s ${EASE}, box-shadow 0.35s ${EASE};
+          box-shadow: 0 1px 0 rgba(0,0,0,0.05);
         }
-        .sl-btn-primary:hover { background: ${COLORS.redDark}; transform: translateY(-1px); }
+        .sl-btn-primary::before {
+          content: ""; position: absolute; inset: 0; z-index: -1;
+          background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.35) 40%, transparent 60%);
+          transform: translateX(-120%); transition: transform 0.7s ${EASE};
+        }
+        .sl-btn-primary:hover { background: ${COLORS.redDark}; transform: translateY(-2px) scale(1.02); box-shadow: 0 14px 28px -10px rgba(179,33,46,0.55); }
+        .sl-btn-primary:hover::before { transform: translateX(120%); }
+        .sl-btn-primary:active { transform: translateY(0) scale(0.98); }
         .sl-btn-ghost {
           background: transparent; color: ${COLORS.black}; border: 1.5px solid ${COLORS.line};
           border-radius: 6px; padding: 12px 20px; font-weight: 600; font-size: 14.5px; cursor: pointer;
-          display: inline-flex; align-items: center; gap: 8px; transition: border-color 0.2s ease, background 0.2s ease;
+          display: inline-flex; align-items: center; gap: 8px;
+          transition: border-color 0.35s ${EASE}, background 0.35s ${EASE}, transform 0.35s ${EASE}, box-shadow 0.35s ${EASE};
         }
-        .sl-btn-ghost:hover { border-color: ${COLORS.gold}; background: ${COLORS.goldLight}; }
-        .sl-card { background: #fff; border: 1px solid ${COLORS.line}; border-radius: 10px; }
+        .sl-btn-ghost:hover { border-color: ${COLORS.gold}; background: ${COLORS.goldLight}; transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 24px -14px rgba(201,154,30,0.5); }
+        .sl-btn-ghost:active { transform: translateY(0) scale(0.98); }
+        .sl-card {
+          background: #fff; border: 1px solid ${COLORS.line}; border-radius: 10px;
+          transition: transform 0.5s ${EASE}, box-shadow 0.5s ${EASE}, border-color 0.5s ${EASE};
+        }
+        .sl-card-hover:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 30px 60px -24px rgba(20,23,28,0.22);
+          border-color: ${COLORS.gold};
+        }
         .sl-ticker-track { display: flex; width: max-content; animation: sl-scroll linear infinite; }
         .sl-ticker-track:hover { animation-play-state: paused; }
         @keyframes sl-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         @keyframes sl-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes sl-pulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.6); opacity: 0; } }
-        .sl-nav-link { color: ${COLORS.slate}; text-decoration: none; font-size: 14.5px; font-weight: 500; }
+        @keyframes sl-orb-drift-1 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(4%, 6%) scale(1.15); } }
+        @keyframes sl-orb-drift-2 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-6%, -4%) scale(1.1); } }
+        @keyframes sl-chevron-bounce { 0%, 100% { transform: translateY(0); opacity: 0.6; } 50% { transform: translateY(8px); opacity: 1; } }
+        @keyframes sl-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        .sl-nav-link { position: relative; color: ${COLORS.slate}; text-decoration: none; font-size: 14.5px; font-weight: 500; transition: color 0.3s ${EASE}; }
+        .sl-nav-link::after {
+          content: ""; position: absolute; left: 0; bottom: -4px; height: 1.5px; width: 100%;
+          background: ${COLORS.gold}; transform: scaleX(0); transform-origin: right;
+          transition: transform 0.4s ${EASE};
+        }
         .sl-nav-link:hover { color: ${COLORS.black}; }
+        .sl-nav-link:hover::after { transform: scaleX(1); transform-origin: left; }
         .sl-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
         .sl-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .sl-split-view { display: grid; grid-template-columns: 1fr 1fr; }
@@ -1481,15 +1647,26 @@ export default function ForeSecure() {
       `}</style>
 
       {/* NAV */}
-      <header style={{ borderBottom: `1px solid ${COLORS.line}`, background: "rgba(247,246,243,0.94)", backdropFilter: "blur(6px)", position: "sticky", top: 0, zIndex: 40 }}>
+      <header
+        style={{
+          borderBottom: `1px solid ${scrollY > 8 ? COLORS.line : "transparent"}`,
+          background: scrollY > 8 ? "rgba(247,246,243,0.82)" : "rgba(247,246,243,0.55)",
+          backdropFilter: "blur(14px) saturate(160%)", WebkitBackdropFilter: "blur(14px) saturate(160%)",
+          position: "sticky", top: 0, zIndex: 40,
+          boxShadow: scrollY > 8 ? "0 8px 30px -20px rgba(20,23,28,0.25)" : "none",
+          transition: `background 0.4s ${EASE}, border-color 0.4s ${EASE}, box-shadow 0.4s ${EASE}`,
+        }}
+      >
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
-          <button
-            onClick={() => { setPage("home"); setSelectedAlert(null); setSelectedService(null); }}
-            style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", textAlign: "left", flexShrink: 0 }}
-            aria-label="ForeSecure home"
-          >
-            <BrandLogo height={30} />
-          </button>
+          <Magnetic strength={10}>
+            <button
+              onClick={() => { setPage("home"); setSelectedAlert(null); setSelectedService(null); }}
+              style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", textAlign: "left", flexShrink: 0 }}
+              aria-label="ForeSecure home"
+            >
+              <BrandLogo height={30} />
+            </button>
+          </Magnetic>
 
           <nav ref={navRef} className="sl-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 30, flex: 1, justifyContent: "center" }}>
             {NAV_MENU.map((item) => (
@@ -1507,22 +1684,27 @@ export default function ForeSecure() {
             <button onClick={() => handleNavigate("Mass Communication")} className="sl-nav-link" style={{ background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit" }}>
               Mass Communication
             </button>
-            <button
-              onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }}
-              style={{
-                display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "inherit",
-                background: page === "alerts" ? COLORS.black : "#fff",
-                color: page === "alerts" ? "#fff" : COLORS.black,
-                border: `1.5px solid ${page === "alerts" ? COLORS.black : COLORS.line}`,
-                borderRadius: 20, padding: "7px 14px 7px 10px", fontSize: 13, fontWeight: 600,
-              }}
-            >
-              <span style={{ position: "relative", display: "flex", width: 8, height: 8 }}>
-                <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: COLORS.red, animation: "sl-pulse 1.6s ease-out infinite" }} />
-                <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: COLORS.red }} />
-              </span>
-              Live Alerts
-            </button>
+            <Magnetic strength={8}>
+              <button
+                onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 8, cursor: "pointer", font: "inherit",
+                  background: page === "alerts" ? COLORS.black : "#fff",
+                  color: page === "alerts" ? "#fff" : COLORS.black,
+                  border: `1.5px solid ${page === "alerts" ? COLORS.black : COLORS.line}`,
+                  borderRadius: 20, padding: "7px 14px 7px 10px", fontSize: 13, fontWeight: 600,
+                  transition: `box-shadow 0.35s ${EASE}, border-color 0.35s ${EASE}`,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = `0 8px 20px -10px ${COLORS.red}88`; e.currentTarget.style.borderColor = COLORS.red; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.borderColor = page === "alerts" ? COLORS.black : COLORS.line; }}
+              >
+                <span style={{ position: "relative", display: "flex", width: 8, height: 8 }}>
+                  <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: COLORS.red, animation: "sl-pulse 1.6s ease-out infinite" }} />
+                  <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: COLORS.red }} />
+                </span>
+                Live Alerts
+              </button>
+            </Magnetic>
           </nav>
 
           <div className="sl-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
@@ -1566,12 +1748,67 @@ export default function ForeSecure() {
 
       {page === "home" && (
       <>
-      {/* HERO — full viewport video (nav sits above it). Drop your own file into
-          /public/videos/hero.mp4, or pass a different src to <HeroVideo src="..." />. */}
-      <section style={{ position: "relative", background: COLORS.black, overflow: "hidden", height: "calc(100vh - 73px)", minHeight: 520, display: "flex", alignItems: "flex-end" }}>
-        <HeroVideo />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(20,23,28,0.15) 0%, rgba(20,23,28,0.75) 100%)" }} />
-        <div style={{ position: "absolute", bottom: 18, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,0.6)" }}>
+      {/* HERO — full viewport video (nav sits above it), now carrying a kinetic
+          headline that assembles itself word-by-word, plus a subtle parallax
+          drift on the video and two drifting gradient orbs for depth. Drop
+          your own file into /public/videos/hero.mp4, or pass a different src
+          to <HeroVideo src="..." />. */}
+      <section style={{ position: "relative", background: COLORS.black, overflow: "hidden", height: "calc(100vh - 73px)", minHeight: 560, display: "flex", alignItems: "flex-end" }}>
+        <div style={{ position: "absolute", inset: -40, transform: `translateY(${scrollY * 0.18}px) scale(${1 + Math.min(scrollY, 400) * 0.00018})`, transition: "transform 0.05s linear" }}>
+          <HeroVideo />
+        </div>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(20,23,28,0.25) 0%, rgba(20,23,28,0.55) 55%, rgba(20,23,28,0.88) 100%)" }} />
+
+        {/* Ambient gradient orbs — pure decoration, drifting slowly to add life behind the headline */}
+        <div aria-hidden="true" style={{ position: "absolute", top: "-10%", left: "-8%", width: "46vw", height: "46vw", maxWidth: 560, maxHeight: 560, borderRadius: "50%", background: `radial-gradient(circle, ${COLORS.red}33 0%, transparent 70%)`, filter: "blur(10px)", animation: "sl-orb-drift-1 14s ease-in-out infinite", pointerEvents: "none" }} />
+        <div aria-hidden="true" style={{ position: "absolute", bottom: "-14%", right: "-6%", width: "38vw", height: "38vw", maxWidth: 480, maxHeight: 480, borderRadius: "50%", background: `radial-gradient(circle, ${COLORS.gold}33 0%, transparent 70%)`, filter: "blur(10px)", animation: "sl-orb-drift-2 16s ease-in-out infinite", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", zIndex: 2, maxWidth: 1160, margin: "0 auto", width: "100%", padding: "0 24px 88px" }}>
+          <div className="sl-mono" style={{
+            display: "inline-flex", alignItems: "center", gap: 8, color: COLORS.gold, fontSize: 12.5,
+            letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 20,
+            opacity: 0, animation: "sl-fade-up 0.8s ease 0.15s forwards",
+          }}>
+            <Activity size={13} /> Global risk intelligence, live
+          </div>
+
+          <KineticHeadline
+            text="Monitor. Assess. Protect."
+            as="h1"
+            className="sl-display"
+            startDelay={250}
+            wordDelay={90}
+            style={{ color: "#fff", fontSize: "clamp(38px, 6.2vw, 74px)", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.04, margin: 0, maxWidth: 780 }}
+          />
+
+          <div style={{
+            marginTop: 22, maxWidth: 480, color: "rgba(255,255,255,0.72)", fontSize: 16.5, lineHeight: 1.6,
+            opacity: 0, animation: "sl-fade-up 0.9s ease 0.75s forwards",
+          }}>
+            A single watch desk for the threats that actually reach your people, sites, and operations — before they become headlines.
+          </div>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: 34, opacity: 0, animation: "sl-fade-up 0.9s ease 0.95s forwards" }}>
+            <Magnetic strength={12}>
+              <button onClick={handleGoToBriefing} className="sl-btn-primary" style={{ padding: "15px 26px", fontSize: 15 }}>
+                Request a briefing <ArrowRight size={16} />
+              </button>
+            </Magnetic>
+            <Magnetic strength={12}>
+              <button
+                onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }}
+                className="sl-btn-ghost"
+                style={{ padding: "14px 24px", fontSize: 15, background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.28)", color: "#fff" }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = COLORS.gold; e.currentTarget.style.background = "rgba(201,154,30,0.14)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.28)"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+              >
+                View live alerts <ChevronRight size={16} />
+              </button>
+            </Magnetic>
+          </div>
+        </div>
+
+        <div style={{ position: "absolute", bottom: 18, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,0.6)", animation: "sl-chevron-bounce 1.8s ease-in-out infinite", zIndex: 2 }}>
           <ChevronDown size={22} />
         </div>
       </section>
@@ -1579,12 +1816,18 @@ export default function ForeSecure() {
       )}
 
       {/* TICKER — signature element, now a simple scrolling brand statement */}
-      <section style={{ background: COLORS.black, padding: "16px 0", overflow: "hidden", borderTop: "1px solid #24272E" }}>
+      <section style={{ position: "relative", background: COLORS.black, padding: "16px 0", overflow: "hidden", borderTop: "1px solid #24272E" }}>
+        <div style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none", background: "linear-gradient(90deg, #14171C 0%, transparent 8%, transparent 92%, #14171C 100%)" }} />
         <div className="sl-ticker-track" style={{ animationDuration: "22s" }}>
           {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 28px", borderRight: "1px solid #2A2E36", whiteSpace: "nowrap" }}>
+            <div
+              key={i}
+              style={{ display: "flex", alignItems: "center", gap: 14, padding: "0 28px", borderRight: "1px solid #2A2E36", whiteSpace: "nowrap", transition: `color 0.3s ${EASE}` }}
+              onMouseEnter={(e) => { e.currentTarget.querySelector("span.sl-display").style.color = COLORS.gold; }}
+              onMouseLeave={(e) => { e.currentTarget.querySelector("span.sl-display").style.color = "#EDEBE4"; }}
+            >
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: COLORS.gold, flexShrink: 0 }} />
-              <span className="sl-display" style={{ fontSize: 15, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#EDEBE4" }}>
+              <span className="sl-display" style={{ fontSize: 15, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#EDEBE4", transition: `color 0.3s ${EASE}` }}>
                 Advanced Technology
               </span>
             </div>
