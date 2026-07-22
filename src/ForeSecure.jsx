@@ -6,6 +6,7 @@ import {
   MapPinned, ExternalLink, Flag, Megaphone, Plus, Trash2, Radio, Layers,
 } from "lucide-react";
 import ThreatGlobe from "./Globe";
+import LiveMapPage from "./LiveMap";
 import { T, FONTS } from "./theme";
 
 /* ===========================================================================
@@ -800,7 +801,7 @@ export default function ForeSecure() {
   const [newsLoading, setNewsLoading] = useState(false);
   const [newsUpdatedAt, setNewsUpdatedAt] = useState(null);
   const [locationModal, setLocationModal] = useState(null);
-  const [page, setPage] = useState("home");
+  const [page, setPage] = useState("home"); // home | alerts | livemap | service | briefing | leads
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [alertRegionFilter, setAlertRegionFilter] = useState("ALL");
   const [specialAdvisories, setSpecialAdvisories] = useState([]);
@@ -1221,6 +1222,21 @@ export default function ForeSecure() {
               </span>
               Live alerts
             </button>
+
+            <button
+              onClick={() => { setPage("livemap"); setSelectedAlert(null); setSelectedService(null); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontFamily: "inherit",
+                background: page === "livemap" ? T.goldWash : "transparent",
+                color: page === "livemap" ? T.gold : T.inkMid,
+                border: `1px solid ${page === "livemap" ? T.goldDim : T.ridge}`,
+                borderRadius: 40, padding: "7px 15px 7px 12px", fontSize: 12.5, fontWeight: 600,
+                transition: "all .22s",
+              }}
+            >
+              <MapPinned size={13} />
+              Live location alerts
+            </button>
           </nav>
 
           <div className="fs-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
@@ -1240,6 +1256,7 @@ export default function ForeSecure() {
             <button onClick={() => handleNavigate("Travel Tracker")} className="fs-navlink" style={{ padding: "12px 0", textAlign: "left" }}>Travel Tracker</button>
             <button onClick={() => handleNavigate("Mass Communication")} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left" }}>Mass Communication</button>
             <button onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); setMenuOpen(false); }} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left", color: T.red }}>Live alerts</button>
+            <button onClick={() => { setPage("livemap"); setSelectedAlert(null); setSelectedService(null); setMenuOpen(false); }} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left", color: T.gold }}>Live location alerts</button>
           </div>
         )}
       </header>
@@ -1788,6 +1805,18 @@ export default function ForeSecure() {
             </div>
           )}
         </section>
+      )}
+
+      {/* =========================================================== LIVE MAP */}
+      {page === "livemap" && (
+        <LiveMapPage
+          alerts={dedupedAlerts}
+          loading={newsLoading}
+          error={newsError}
+          updatedAt={newsUpdatedAt}
+          onRefresh={loadNews}
+          timeAgo={timeAgo}
+        />
       )}
 
       {/* =========================================================== SERVICE */}
