@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Plane, CloudLightning, ShieldAlert, HeartPulse, ArrowRight, ArrowUpRight,
+  Plane, CloudLightning, ShieldAlert, HeartPulse, ArrowRight,
   MapPin, Clock, CheckCircle2, Menu, X, Mail, Globe2, Lock,
   Newspaper, MoreHorizontal, ChevronRight, ChevronDown, RefreshCw,
   MapPinned, ExternalLink, Flag, Megaphone, Plus, Trash2, Radio, Layers,
@@ -267,6 +267,16 @@ const SERVICE_CONTENT = {
       "If a traveler's route crosses an emerging risk — a storm system, a security incident, an airspace closure — the platform flags the exposure automatically and routes an alert to both the traveler and your duty-of-care team, with enough context to decide on a reroute or a hold before the situation develops further.",
       "Dashboards give your security desk a single map view of everyone currently in motion, filterable by region, risk level, or business unit, so a live headcount of exposed personnel is always one glance away.",
     ],
+  },
+  "SOPs": {
+    category: "Platform",
+    summary: "Standard operating procedures, versioned and in reach when they matter.",
+    placeholder: true,
+  },
+  "ERPs": {
+    category: "Platform",
+    summary: "Emergency response plans, ready before the emergency.",
+    placeholder: true,
   },
   "Mass Communication": {
     category: "Platform",
@@ -1353,13 +1363,53 @@ export default function ForeSecure() {
         .fs-split { display: grid; grid-template-columns: 1fr 1fr; }
 
         .fs-hero-grid {
-          display: grid; grid-template-columns: 1.05fr .95fr; gap: 40px; align-items: center;
+          /* The globe is the hero, so it gets the larger share. The negative
+             right margin lets it bleed past the content gutter — the dead space
+             around it was reading as emptiness rather than restraint. */
+          display: grid; grid-template-columns: 1fr 1.15fr; gap: 24px; align-items: center;
         }
+        .fs-hero-globe {
+          position: relative; aspect-ratio: 1/1;
+          /* The bleed is clamped rather than a flat -6vw: below ~1300px the
+             viewport-relative value pushed the globe past the right edge and
+             produced a horizontal scrollbar. This grows only when there is
+             actually room for it. */
+          margin-right: clamp(-70px, calc(1240px - 100vw), 0px);
+          margin-top: -2vh; margin-bottom: -2vh;
+        }
+        /* Vertical scroll cue pinned to the right edge, as a reading affordance
+           rather than decoration: it marks where the fold is. */
+        .fs-scrollcue {
+          position: absolute; right: 10px; bottom: 40px;
+          display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        /* writing-mode is scoped to the label only. Applied to the flex parent
+           it rotates the whole layout context, so column direction runs sideways
+           and the rail's width/height swap. */
+        .fs-scrollcue > span:first-child {
+          writing-mode: vertical-rl; text-orientation: mixed;
+        }
+        .fs-scrollcue-rail {
+          width: 1px; height: 54px; background: linear-gradient(180deg, ${T.ridgeHi}, transparent);
+          position: relative; overflow: hidden;
+        }
+        .fs-scrollcue-rail::after {
+          content: ""; position: absolute; left: 0; top: 0; width: 1px; height: 18px;
+          background: ${T.gold};
+          animation: fs-railrun 2.2s cubic-bezier(.6,0,.4,1) infinite;
+        }
+        @keyframes fs-railrun {
+          0%   { transform: translateY(-20px); opacity: 0; }
+          35%  { opacity: 1; }
+          100% { transform: translateY(56px); opacity: 0; }
+        }
+        @media (max-width: 1000px) { .fs-scrollcue { display: none; } }
 
         :focus-visible { outline: 2px solid ${T.gold}; outline-offset: 3px; border-radius: 4px; }
 
         @media (max-width: 1000px) {
           .fs-hero-grid { grid-template-columns: 1fr; gap: 24px; }
+          .fs-hero-globe { margin-right: 0; margin-top: 0; margin-bottom: 0; }
           .fs-desktop-nav { display: none !important; }
           .fs-mobile-toggle { display: flex !important; }
           .fs-g4 { grid-template-columns: repeat(2, 1fr); }
@@ -1386,7 +1436,9 @@ export default function ForeSecure() {
           transition: "background .3s, border-color .3s",
         }}
       >
-        <div className="fs-wrap" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, paddingTop: 16, paddingBottom: 16 }}>
+        {/* Full-bleed rather than .fs-wrap: the centred 1200px container was
+            holding the logo ~120px in from the edge on wide screens. */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, padding: "16px 28px" }}>
           <button
             onClick={() => { setPage("home"); setSelectedAlert(null); setSelectedService(null); }}
             style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}
@@ -1408,6 +1460,8 @@ export default function ForeSecure() {
             ))}
             <button onClick={() => handleNavigate("Travel Tracker")} className="fs-navlink">Travel Tracker</button>
             <button onClick={() => handleNavigate("Mass Communication")} className="fs-navlink">Mass Communication</button>
+            <button onClick={() => handleNavigate("SOPs")} className="fs-navlink">SOPs</button>
+            <button onClick={() => handleNavigate("ERPs")} className="fs-navlink">ERPs</button>
 
             <button
               onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }}
@@ -1455,10 +1509,12 @@ export default function ForeSecure() {
         </div>
 
         {menuOpen && (
-          <div className="fs-wrap" style={{ paddingTop: 8, paddingBottom: 22, borderTop: `1px solid ${T.ridge}` }}>
+          <div style={{ padding: "8px 28px 22px", borderTop: `1px solid ${T.ridge}` }}>
             <MobileNavAccordion menu={NAV_MENU} onNavigate={handleNavigate} />
             <button onClick={() => handleNavigate("Travel Tracker")} className="fs-navlink" style={{ padding: "12px 0", textAlign: "left" }}>Travel Tracker</button>
             <button onClick={() => handleNavigate("Mass Communication")} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left" }}>Mass Communication</button>
+            <button onClick={() => handleNavigate("SOPs")} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left" }}>SOPs</button>
+            <button onClick={() => handleNavigate("ERPs")} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left" }}>ERPs</button>
             <button onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); setMenuOpen(false); }} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left", color: T.red }}>Live alerts</button>
             <button onClick={() => { setPage("livemap"); setSelectedAlert(null); setSelectedService(null); setMenuOpen(false); }} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left", color: T.gold }}>Live location alerts</button>
           </div>
@@ -1481,32 +1537,53 @@ export default function ForeSecure() {
           {/* ---- HERO: the globe is the thesis ---- */}
           <section style={{ position: "relative", overflow: "hidden", paddingTop: 24, paddingBottom: 40 }}>
             <div className="fs-grid-bg" style={{ position: "absolute", inset: 0, maskImage: "radial-gradient(70% 60% at 50% 30%, #000 0%, transparent 100%)", WebkitMaskImage: "radial-gradient(70% 60% at 50% 30%, #000 0%, transparent 100%)" }} />
+            <div className="fs-scrollcue">
+              <span className="fs-mono" style={{ fontSize: 9.5, letterSpacing: ".28em", textTransform: "uppercase", color: T.inkLow }}>
+                Scroll
+              </span>
+              <span className="fs-scrollcue-rail" />
+            </div>
+
             <div className="fs-wrap" style={{ position: "relative" }}>
               <div className="fs-hero-grid">
                 <div style={{ animation: "fs-fade-up .9s cubic-bezier(.22,1,.36,1) both" }}>
                   <Eyebrow live>{activeCount ? `${activeCount} events on watch` : "Watch desk online"}</Eyebrow>
 
                   <h1 className="fs-display" style={{
-                    fontSize: "clamp(38px, 5.6vw, 68px)", fontWeight: 700, lineHeight: 1.02,
-                    letterSpacing: "-.035em", marginTop: 22, marginBottom: 0,
+                    fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 700, lineHeight: 1.03,
+                    letterSpacing: "-.035em", marginTop: 18, marginBottom: 0,
                   }}>
                     Know your people<br />are safe.<br />
                     <span style={{ color: T.gold }}>Before you're asked.</span>
                   </h1>
 
-                  <p style={{ fontSize: 17.5, color: T.inkMid, lineHeight: 1.65, marginTop: 24, maxWidth: 500 }}>
+                  {/* A second, quieter statement between headline and body copy.
+                      Without it the jump from 60px to 17px lands too abruptly. */}
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 14, marginTop: 20,
+                    animation: "fs-fade-up 1s cubic-bezier(.22,1,.36,1) .2s both",
+                  }}>
+                    <span style={{ width: 34, height: 1, background: T.goldDim, flexShrink: 0 }} />
+                    <span className="fs-display" style={{
+                      fontSize: 17, fontWeight: 500, color: T.gold, letterSpacing: "-.01em",
+                    }}>
+                      Monitor. Assess. Respond.
+                    </span>
+                  </div>
+
+                  <p style={{ fontSize: 16.5, color: T.inkMid, lineHeight: 1.62, marginTop: 18, maxWidth: 460 }}>
                     ForeSecure watches every site and every itinerary against live global conditions,
                     then alerts only the people actually exposed — with the action you want them to take.
                   </p>
                 </div>
 
                 {/* the globe */}
-                <div style={{ position: "relative", aspectRatio: "1/1", minHeight: 340, animation: "fs-fade-up 1.1s cubic-bezier(.22,1,.36,1) .15s both" }}>
+                <div className="fs-hero-globe" style={{ animation: "fs-fade-up 1.1s cubic-bezier(.22,1,.36,1) .15s both" }}>
                   <ThreatGlobe />
                   <div className="fs-mono" style={{
-                    position: "absolute", bottom: 6, left: "50%", transform: "translateX(-50%)",
-                    fontSize: 10, letterSpacing: ".14em", textTransform: "uppercase", color: T.inkLow,
-                    whiteSpace: "nowrap",
+                    position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)",
+                    fontSize: 9.5, letterSpacing: ".16em", textTransform: "uppercase", color: T.inkLow,
+                    whiteSpace: "nowrap", opacity: .75,
                   }}>
                     Drag to rotate
                   </div>
@@ -1570,33 +1647,6 @@ export default function ForeSecure() {
             </Reveal>
 
             <EscalationPath steps={ESCALATION} />
-          </section>
-
-          {/* ---- PLATFORM SPLIT ---- */}
-          <section className="fs-wrap" style={{ paddingTop: 110 }}>
-            <div className="fs-g2" style={{ gap: 18 }}>
-              {[
-                { key: "Travel Tracker", icon: Plane, line: "Itineraries sync at booking. Nobody goes dark between legs." },
-                { key: "Mass Communication", icon: Megaphone, line: "One message, one radius, delivery receipts in real time." },
-              ].map(({ key, icon: Icon, line }, i) => (
-                <Reveal key={key} delay={i * 100} from={i === 0 ? "left" : "right"}>
-                  <button onClick={() => handleNavigate(key)} className="fs-card fs-card--hover"
-                    style={{ display: "block", width: "100%", textAlign: "left", cursor: "pointer", padding: 0, overflow: "hidden", fontFamily: "inherit" }}>
-                    <ContourArt seed={i + 2} height={190} accent={i === 0 ? T.gold : T.red} />
-                    <div style={{ padding: 26 }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-                          <Icon size={17} color={T.gold} />
-                          <h3 className="fs-display" style={{ fontSize: 20, fontWeight: 600, color: T.ink, letterSpacing: "-.02em" }}>{key}</h3>
-                        </div>
-                        <ArrowUpRight size={19} color={T.inkLow} />
-                      </div>
-                      <p style={{ fontSize: 14.5, color: T.inkMid, marginTop: 10, lineHeight: 1.6 }}>{line}</p>
-                    </div>
-                  </button>
-                </Reveal>
-              ))}
-            </div>
           </section>
 
           {/* ---- LIVE FEED PREVIEW ---- */}
@@ -1986,11 +2036,26 @@ export default function ForeSecure() {
           <section className="fs-wrap" style={{ maxWidth: 1000, paddingTop: 52 }}>
             <div className="fs-service-layout" style={{ display: "grid", gridTemplateColumns: "1fr 250px", gap: 52 }}>
               <Reveal>
-                <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-                  {SERVICE_CONTENT[selectedService].body.map((p, i) => (
-                    <p key={i} style={{ fontSize: 16.5, color: T.inkMid, lineHeight: 1.82 }}>{p}</p>
-                  ))}
-                </div>
+                {SERVICE_CONTENT[selectedService].placeholder ? (
+                  /* Stubbed service: say so plainly rather than shipping filler
+                     copy that reads as real. `body` is absent on these entries,
+                     so mapping over it would throw. */
+                  <div className="fs-card" style={{ padding: 32 }}>
+                    <div className="fs-mono" style={{ fontSize: 10, letterSpacing: ".16em", textTransform: "uppercase", color: T.gold }}>
+                      In development
+                    </div>
+                    <p style={{ fontSize: 16.5, color: T.inkMid, lineHeight: 1.8, marginTop: 14 }}>
+                      This page is still being written. In the meantime, an analyst can walk you
+                      through how {selectedService} fits alongside the rest of the platform.
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+                    {(SERVICE_CONTENT[selectedService].body || []).map((p, i) => (
+                      <p key={i} style={{ fontSize: 16.5, color: T.inkMid, lineHeight: 1.82 }}>{p}</p>
+                    ))}
+                  </div>
+                )}
               </Reveal>
 
               <div>
