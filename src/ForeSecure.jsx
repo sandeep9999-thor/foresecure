@@ -4,6 +4,7 @@ import {
   MapPin, Clock, CheckCircle2, Menu, X, Mail, Globe2, Lock,
   Newspaper, MoreHorizontal, ChevronRight, ChevronDown, RefreshCw,
   MapPinned, ExternalLink, Flag, Megaphone, Plus, Trash2, Radio, Layers,
+  Image as ImageIcon,
 } from "lucide-react";
 import ThreatGlobe from "./Globe";
 import LiveMapPage from "./LiveMap";
@@ -82,26 +83,18 @@ const NAV_MENU = [
   {
     label: "Consulting",
     items: [
-      { label: "Risk Consulting" },
-      {
-        label: "Security Design",
-        items: [
-          { label: "Physical Security Design and Project Management" },
-          { label: "Physical Security Operations Center Design" },
-          { label: "Enterprise Electronic Security Technology Transformation" },
-          { label: "Enterprise Physical Security Master Plans" },
-        ],
-      },
+      { label: "Risk Assessment Services" },
+      { label: "Security Operations Consulting" },
+      { label: "Training & Awareness" },
       { label: "Protective Services" },
-      { label: "Cybersecurity and Resilience" },
+      { label: "Physical Security & Access Control Solutions" },
+      { label: "GSOC / Command Center Design" },
       { label: "Environmental, Social & Governance" },
       {
         label: "Climate & Disaster Risk Resilience",
         items: [
           { label: "Climate Risk Assessment and Resilience" },
           { label: "Disaster Risk Management" },
-          { label: "Carbon Footprint Assessment" },
-          { label: "Hydrological Assessment and Water Related Services" },
         ],
       },
     ],
@@ -117,66 +110,186 @@ const OVERFLOW_MENU = [
 
 /* Service copy — unchanged from your original, it reads well. */
 const SERVICE_CONTENT = {
-  "Risk Consulting": {
+  "Risk Assessment Services": {
     category: "Consulting",
-    summary: "Turning uncertainty into a plan you can act on.",
+    summary: "Three assessments, covering the people who move, the events you run, and the places you operate.",
+    hero: "/images/services/risk-assessment-services.jpg",
     body: [
-      "Every organization carries exposure it can't always see — in its supply lines, its people's movements, its facilities, or the political weather around a market it operates in. ForeSecure's risk consulting practice starts by mapping that exposure properly: what could go wrong, how likely it is, and what it would actually cost the business if it did.",
-      "From there, our analysts build a mitigation plan that fits the client rather than a generic playbook. That can mean rewriting an incident response procedure, running a tabletop exercise with leadership, or standing up a continuous monitoring feed so a threat is caught while it's still a rumor rather than a headline.",
-      "We work across banking, manufacturing, energy, logistics, and technology — sectors where an operational, compliance, or reputational shock can move markets or shut a site down. The goal is always the same: give decision-makers enough warning and enough clarity to act early, not just react.",
+      "Exposure looks different depending on where it sits. A traveller crossing an unfamiliar city, a crowd filling a venue, and a facility standing empty overnight are three separate problems, and treating them with one generic checklist is how gaps get missed.",
+      "Each assessment below is scoped to its own domain and delivered as findings you can act on — not a risk register that gets filed and forgotten.",
+    ],
+    sections: [
+      {
+        image: "/images/services/travel-risk.jpg",
+        title: "Travel Risk Assessment",
+        blurb: "For people moving through places they don't know well.",
+        points: [
+          "Pre-travel risk intelligence",
+          "Country and city risk analysis",
+          "Executive travel security planning",
+          "Travel advisories and alerts",
+          "Crisis support during travel",
+        ],
+      },
+      {
+        image: "/images/services/event-security.jpg",
+        title: "Event Security Risk Assessment",
+        blurb: "For the days when a venue fills up and the margin for error narrows.",
+        points: [
+          "Venue security assessment",
+          "Threat and vulnerability assessment",
+          "Crowd management planning",
+          "Emergency response planning",
+          "Security staffing recommendations",
+        ],
+      },
+      {
+        image: "/images/services/site-security.jpg",
+        title: "Site Security Risk Assessment",
+        blurb: "For the buildings and perimeters your operation depends on.",
+        points: [
+          "Office and facility security audits",
+          "Physical security assessment",
+          "Perimeter security review",
+          "Vulnerability identification",
+          "Risk mitigation recommendations",
+        ],
+      },
     ],
   },
-  "Physical Security Design and Project Management": {
-    category: "Security Design",
-    summary: "Designing protection into a building, not bolting it on afterward.",
+  "GSOC / Command Center Design": {
+    category: "Consulting",
+    summary: "End-to-end command center consulting.",
+    hero: "/images/services/gsoc-command-center-design.jpg",
     body: [
-      "Retrofitting security into a finished building is expensive and full of compromises. Our design team works alongside architects and facility planners from the earliest drawings, positioning cameras, access points, barriers, and control rooms so they do their job without fighting the building's layout.",
-      "Once a design is signed off, we stay involved through procurement and installation — managing vendors, checking work against spec, and testing systems before handover — so what gets built actually matches what was designed.",
+      "A global security operations center is the room where every camera, badge reader, alarm, and travel alert finally converges — and where a developing incident either gets caught early or gets missed entirely.",
+      "We design that room end to end: the physical layout, the technology stack, the workflows that decide when a flagged event becomes a phone call, and the staffing model that keeps it running at three in the morning.",
+    ],
+    feature: {
+      tag: "Command Center",
+      title: "GSOC design and layout",
+      image: "/images/services/gsoc-design.jpg",
+      blurb: "From video wall sightlines to the escalation logic behind them — the room and the procedures designed together, not bolted to each other afterward.",
+      points: [
+        "Video wall planning",
+        "Security technology integration",
+        "Monitoring workstation design",
+        "Incident management workflows",
+        "SOC/GSOC architecture",
+        "Technology selection and procurement support",
+        "24×7 monitoring strategy",
+      ],
+    },
+  },
+  "Physical Security & Access Control Solutions": {
+    category: "Consulting",
+    summary: "Design and implementation of integrated security systems.",
+    hero: "/images/services/physical-security-and-access-control-solutions.jpg",
+    body: [
+      "Access control, cameras, intrusion sensors, and fire safety are usually bought separately, installed by different vendors, and left unable to talk to each other. The result is a building that is monitored in four places at once and understood in none of them.",
+      "We design these four systems as one, then manage the implementation — so a badge swipe, a camera feed, an alarm, and an evacuation route all resolve to the same picture of what is happening on site.",
+    ],
+    cards: [
+      {
+        tag: "Access Control",
+        image: "/images/services/access-control.jpg",
+        blurb: "Who gets in, where they can go, and a record of both.",
+        points: [
+          "Biometric access systems",
+          "Smart card/RFID access",
+          "Visitor Management Systems (VMS)",
+          "Turnstiles and barriers",
+          "Door controllers and access permissions",
+        ],
+      },
+      {
+        tag: "CCTV Surveillance",
+        image: "/images/services/cctv-surveillance.jpg",
+        blurb: "Coverage designed around sightlines, not camera count.",
+        points: [
+          "CCTV system design",
+          "Camera placement planning",
+          "IP Camera installation",
+          "Video Management System (VMS)",
+          "Remote monitoring solutions",
+        ],
+      },
+      {
+        tag: "Intrusion Detection",
+        image: "/images/services/intrusion-detection.jpg",
+        blurb: "Knowing the moment a perimeter is crossed.",
+        points: [
+          "Motion sensors",
+          "Door/window sensors",
+          "Panic buttons",
+          "Alarm monitoring",
+          "Security integration",
+        ],
+      },
+      {
+        tag: "Fire & Life Safety",
+        image: "/images/services/fire-life-safety.jpg",
+        blurb: "Detection, evacuation, and the compliance record behind both.",
+        points: [
+          "Fire alarm systems",
+          "Smoke and heat detectors",
+          "Emergency evacuation systems",
+          "Fire suppression integration",
+          "Compliance assessments",
+        ],
+      },
     ],
   },
-  "Physical Security Operations Center Design": {
-    category: "Security Design",
-    summary: "The room where every camera, alarm, and alert comes together.",
+  "Training & Awareness": {
+    category: "Consulting",
+    summary: "Procedure only works if the people holding it have practised.",
+    hero: "/images/services/training-awareness.jpg",
     body: [
-      "A security operations center is only as good as the workflows built around it. We design the physical layout, technology stack, and staffing model of a client's control room so operators can spot a developing incident quickly and hand it to the right team without confusion.",
-      "That includes everything from monitor-wall ergonomics and shift rostering to the escalation logic that decides when a flagged event becomes a phone call to a duty manager.",
+      "A response plan that has never been rehearsed is a document, not a capability. The gap between the two only shows up on the day it matters, which is the worst possible time to discover it.",
+      "We train the people who operate your security function and the wider staff who have to act alongside them — from console operators running a live incident to executives making decisions under pressure with incomplete information.",
+      "Sessions are built around your actual procedures and your actual sites, not a generic curriculum. The aim is that when something happens, the response is recognised rather than improvised.",
+    ],
+    points: [
+      "GSOC operator training",
+      "Security awareness programs",
+      "Emergency drills",
+      "Tabletop exercises",
+      "Executive crisis management training",
+      "Access control system training",
     ],
   },
-  "Enterprise Electronic Security Technology Transformation": {
-    category: "Security Design",
-    summary: "Replacing a patchwork of old systems with one that actually talks to itself.",
+  "Security Operations Consulting": {
+    category: "Consulting",
+    summary: "Building the operation that runs your security, not just the systems it runs on.",
+    hero: "/images/services/security-operations.jpg",
     body: [
-      "Large organizations often accumulate security technology one acquisition or building at a time, ending up with a mismatched collection of access control, CCTV, and alarm systems that don't share data. We plan and run the transition to a unified platform, sequencing the rollout so sites stay protected throughout the changeover.",
-      "The result is a single view of security posture across every site, instead of a dozen disconnected local ones.",
+      "Most security programs accumulate rather than get designed. A camera system here, a travel policy there, a reporting format inherited from whoever held the role last — and no single view of whether any of it is working.",
+      "We build the operating layer that ties those parts together: the processes that turn a flagged event into a decision, the reporting that tells leadership what it actually needs to know, and the monitoring that catches a developing situation while there is still time to act on it.",
+      "The result is a security function that runs on defined practice rather than institutional memory — one that survives staff turnover and scales past the single site it started in.",
     ],
-  },
-  "Enterprise Physical Security Master Plans": {
-    category: "Security Design",
-    summary: "A long-range roadmap for protecting every site a company owns.",
-    body: [
-      "A master plan sets out, site by site and year by year, where security investment should go and why — based on a consistent risk methodology rather than whichever building shouted loudest last budget cycle.",
-      "We build these plans to survive organizational change: new leadership, new geographies, and new threats can be absorbed without starting over.",
+    points: [
+      "GSOC setup and optimization",
+      "Incident management processes",
+      "Security reporting framework",
+      "Risk intelligence operations",
+      "Travel security program development",
+      "Threat monitoring",
+      "Security dashboards",
     ],
   },
   "Protective Services": {
     category: "Consulting",
     summary: "Keeping people safe as they move, not just where they sit.",
+    hero: "/images/services/protective-services.jpg",
     body: [
       "Executives, project teams, and traveling staff are exposed the moment they leave a secured building. Our protective services cover close protection, journey management, and advance work — route recces, local liaison, and contingency planning — for movement through higher-risk environments.",
       "Every deployment starts with understanding the specific reason for travel and the specific risks of the destination, rather than applying a one-size-fits-all security detail.",
     ],
   },
-  "Cybersecurity and Resilience": {
-    category: "Consulting",
-    summary: "Treating a breach as a business continuity problem, not just an IT one.",
-    body: [
-      "A cyberattack rarely stays contained to a server room — it can halt production lines, expose customer data, or freeze payment systems. Our cybersecurity and resilience practice works across both domains: hardening technical defenses and building the organizational response plan for when prevention isn't enough.",
-      "That includes vulnerability assessments, incident response planning, and tabletop simulations that get technical and business teams rehearsing the same playbook together.",
-    ],
-  },
   "Environmental, Social & Governance": {
     category: "Consulting",
     summary: "Making ESG measurable instead of aspirational.",
+    hero: "/images/services/environmental-social-and-governance.jpg",
     body: [
       "ESG commitments only mean something if they can be tracked, audited, and reported credibly. We help organizations build the assessment frameworks, data collection processes, and governance structures that turn sustainability goals into figures a board — and a regulator — can trust.",
       "This spans environmental impact assessments, social risk reviews across supply chains, and governance audits aligned to the standards clients are actually held to.",
@@ -185,6 +298,7 @@ const SERVICE_CONTENT = {
   "Climate Risk Assessment and Resilience": {
     category: "Climate & Disaster Risk Resilience",
     summary: "Understanding how a changing climate touches a specific site.",
+    hero: "/images/services/climate-risk-assessment-and-resilience.jpg",
     body: [
       "Flood maps, heat projections, and storm-frequency data mean little until they're translated into what they imply for a specific factory, port, or office campus. We assess physical climate risk at the site level and build resilience plans — engineering, insurance, and operational — around what the data actually shows for that location.",
     ],
@@ -192,27 +306,15 @@ const SERVICE_CONTENT = {
   "Disaster Risk Management": {
     category: "Climate & Disaster Risk Resilience",
     summary: "Planning for the event no one wants to plan for.",
+    hero: "/images/services/disaster-risk-management.jpg",
     body: [
       "Earthquakes, cyclones, and industrial accidents don't wait for a convenient time. Our disaster risk management work builds the response plans, evacuation procedures, and recovery playbooks that let an organization act fast and coherently when the unexpected happens, rather than improvising under pressure.",
-    ],
-  },
-  "Carbon Footprint Assessment": {
-    category: "Climate & Disaster Risk Resilience",
-    summary: "Measuring emissions with enough rigor to report them publicly.",
-    body: [
-      "We calculate an organization's greenhouse gas footprint across its operations and supply chain using recognized accounting methods, so the resulting figures hold up to investor and regulatory scrutiny — and give the client a real baseline to reduce from.",
-    ],
-  },
-  "Hydrological Assessment and Water Related Services": {
-    category: "Climate & Disaster Risk Resilience",
-    summary: "Water risk, from flooding to scarcity.",
-    body: [
-      "Water is a two-sided risk: too much of it floods a site, too little disrupts operations that depend on it. We model local hydrology, flood exposure, and water availability to help clients plan facilities, insurance, and continuity measures around the water risk specific to their location.",
     ],
   },
   "Resourcing": {
     category: "Resourcing",
     summary: "Embedded security talent, without running a security recruitment desk.",
+    hero: "/images/services/resourcing.jpg",
     body: [
       "Not every organization needs a full in-house security department, but most need reliable security expertise on-site. We place vetted security managers, analysts, and operations staff directly into client teams, handling recruitment, training, and quality oversight so the client gets the expertise without carrying the HR overhead.",
     ],
@@ -220,6 +322,7 @@ const SERVICE_CONTENT = {
   "Careers": {
     category: "Careers",
     summary: "Join the team keeping people and operations safe, worldwide.",
+    hero: "/images/services/careers.jpg",
     body: [
       "ForeSecure hires analysts, field specialists, and engineers who want their work to matter the day something actually goes wrong. We look for people comfortable with ambiguity, careful under pressure, and genuinely curious about how risk moves around the world.",
     ],
@@ -227,6 +330,7 @@ const SERVICE_CONTENT = {
   "Blogs": {
     category: "Insights",
     summary: "Field notes from the analysts doing the work.",
+    hero: "/images/services/blogs.jpg",
     body: [
       "Our blog covers the trends, incidents, and lessons our own risk consultants are tracking — from emerging cyber threats to how climate risk is reshaping site selection. It's written by the people doing the assessments, not a marketing team repackaging headlines.",
     ],
@@ -234,6 +338,7 @@ const SERVICE_CONTENT = {
   "Special Advisory": {
     category: "Insights",
     summary: "Deep-dive briefings on a single, developing situation.",
+    hero: "/images/services/special-advisory.jpg",
     body: [
       "When a single event — a coup, a major storm system, a regulatory shift — has outsized implications for clients operating in the region, we publish a special advisory: a focused briefing on what's happening, what could happen next, and what it means operationally.",
     ],
@@ -241,6 +346,7 @@ const SERVICE_CONTENT = {
   "Events": {
     category: "Insights",
     summary: "Where our analysts meet the people managing risk on the ground.",
+    hero: "/images/services/events.jpg",
     body: [
       "From closed-door briefings for security leaders to public panels on emerging threats, our events are built around conversation, not just presentation. Check back for upcoming sessions, or get in touch to suggest a topic worth covering.",
     ],
@@ -248,6 +354,7 @@ const SERVICE_CONTENT = {
   "Our Story": {
     category: "About us",
     summary: "How a watch desk became a global risk practice.",
+    hero: "/images/services/our-story.jpg",
     body: [
       "ForeSecure grew out of a simple frustration: the organizations that most needed early warning of a crisis were usually the last to hear about it. What began as a small monitoring desk has grown into a global practice spanning consulting, protective services, and technology — but the original goal hasn't changed: get the right information to the right person before it's too late to act on it.",
     ],
@@ -255,6 +362,7 @@ const SERVICE_CONTENT = {
   "Our Team": {
     category: "About us",
     summary: "Analysts, engineers, and field operators — not consultants in suits.",
+    hero: "/images/services/our-team.jpg",
     body: [
       "Our team blends former military and law enforcement officers, security engineers, data analysts, and regional specialists who've actually worked in the markets they cover. That mix is deliberate: understanding a risk on paper and understanding it on the ground are different skills, and our clients need both.",
     ],
@@ -262,25 +370,58 @@ const SERVICE_CONTENT = {
   "Travel Tracker": {
     category: "Platform",
     summary: "Every traveler, every itinerary, matched against live conditions in real time.",
+    hero: "/images/services/travel-tracker.jpg",
     body: [
       "Travel Tracker ingests itineraries directly from your travel management provider the moment they're booked — flights, hotels, ground transport — and plots each one against ForeSecure's live threat layer. There's no manual entry and no gap between a trip being booked and it being watched.",
       "If a traveler's route crosses an emerging risk — a storm system, a security incident, an airspace closure — the platform flags the exposure automatically and routes an alert to both the traveler and your duty-of-care team, with enough context to decide on a reroute or a hold before the situation develops further.",
       "Dashboards give your security desk a single map view of everyone currently in motion, filterable by region, risk level, or business unit, so a live headcount of exposed personnel is always one glance away.",
     ],
   },
-  "SOPs": {
+  "SOPs / ERPs": {
     category: "Platform",
-    summary: "Standard operating procedures, versioned and in reach when they matter.",
-    placeholder: true,
-  },
-  "ERPs": {
-    category: "Platform",
-    summary: "Emergency response plans, ready before the emergency.",
-    placeholder: true,
+    title: "SOP & Emergency Response Planning",
+    summary: "Develop standardized security procedures and crisis response frameworks.",
+    hero: "/images/services/sops-erps.jpg",
+    body: [
+      "The worst time to decide who calls whom is while it is happening. Written procedure is what separates a coordinated response from five people improvising in parallel.",
+      "We write both halves: the day-to-day procedures your security operation runs on, and the emergency plans it falls back to when the day stops being ordinary.",
+    ],
+    tiles: [
+      {
+        label: "SOPs",
+        title: "Standard Operating Procedures",
+        image: "/images/services/sops.jpg",
+        blurb: "The procedures your security operation runs on every ordinary day — written down, agreed, and specific enough to follow under pressure.",
+        points: [
+          "Security operations SOPs",
+          "Incident response procedures",
+          "Access control procedures",
+          "Visitor management SOPs",
+          "Alarm response procedures",
+        ],
+      },
+      {
+        label: "ERPs",
+        title: "Emergency Response Plans",
+        image: "/images/services/erps.jpg",
+        blurb: "What happens when the ordinary day ends — scenario by scenario, with the decisions made in advance rather than in the moment.",
+        points: [
+          "Fire emergencies",
+          "Medical emergencies",
+          "Natural disasters",
+          "Active shooter response",
+          "Bomb threats",
+          "Civil unrest",
+          "Business continuity support",
+          "Crisis management playbooks",
+        ],
+      },
+    ],
   },
   "Mass Communication": {
     category: "Platform",
     summary: "Reach the right people, at the right radius, in seconds — not the whole company.",
+    hero: "/images/services/mass-communication.jpg",
     body: [
       "When a situation demands a notification, speed and precision both matter. Mass Communication lets your team compose a single alert and dispatch it instantly to everyone inside a defined radius — a building, a city, a country — by SMS, app push, email, or automated voice call, with delivery and read receipts tracked in real time.",
       "Message templates are pre-approved by category (severe weather, security incident, facility lockdown, all-clear) so a response doesn't have to be drafted from scratch under pressure, and every dispatch is logged for after-action review.",
@@ -351,6 +492,32 @@ function Reveal({ children, delay = 0, from = "up", style = {} }) {
     >
       {children}
     </div>
+  );
+}
+
+// Same reveal behaviour as <Reveal>, but renders an <li> so it can sit directly
+// inside a <ul> without breaking list semantics.
+function RevealItem({ children, delay = 0, style = {} }) {
+  const [ref, visible] = useReveal();
+  const reduced = typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  return (
+    <li
+      ref={ref}
+      style={{
+        display: "flex", alignItems: "baseline", gap: 12,
+        padding: "13px 0", borderTop: `1px solid ${T.ridge}`,
+        fontSize: 16, color: T.ink, lineHeight: 1.5,
+        opacity: visible || reduced ? 1 : 0,
+        transform: visible || reduced ? "none" : "translate3d(24px, 0, 0)",
+        transition: reduced ? "none" :
+          `opacity .7s cubic-bezier(.22,1,.36,1) ${delay}ms, transform .7s cubic-bezier(.22,1,.36,1) ${delay}ms`,
+        ...style,
+      }}
+    >
+      {children}
+    </li>
   );
 }
 
@@ -485,11 +652,161 @@ function ContourArt({ seed = 1, height = 240, accent = T.gold }) {
   );
 }
 
+
+
+
+// Background image for a photographic service hero. Fails silently to the
+// page background rather than showing a broken-image box behind the copy.
+function HeroImage({ src }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return (
+    <img
+      src={src}
+      alt=""
+      aria-hidden="true"
+      onError={() => setFailed(true)}
+      style={{
+        position: "absolute", inset: 0, width: "100%", height: "100%",
+        objectFit: "cover", objectPosition: "center right",
+        // Pulls the photo toward the page's tonal range so it reads as part of
+        // the design rather than a picture pasted behind the text.
+        filter: "saturate(.62) contrast(1.04)",
+      }}
+    />
+  );
+}
+
+/* ---- Service tile ----------------------------------------------------------
+   A large photographic tile with the copy laid over it. At rest it shows the
+   label, title, and blurb; on hover the block lifts and the detail list slides
+   up beneath it.
+
+   Touch devices have no hover, so the same reveal is bound to tap — without it
+   the points would be unreachable on a phone.
+   -------------------------------------------------------------------------- */
+function ServiceTile({ tile }) {
+  const [open, setOpen] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const hasImage = tile.image && !failed;
+
+  return (
+    <div
+      className={`fs-tile ${open ? "fs-tile--open" : ""}`}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+      onClick={() => setOpen((v) => !v)}
+      tabIndex={0}
+      role="group"
+      aria-label={tile.title}
+    >
+      {hasImage ? (
+        <img
+          className="fs-tile-img"
+          src={tile.image}
+          alt=""
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <div className="fs-tile-img fs-tile-fallback">
+          <ImageIcon size={24} color={T.goldDim} />
+          <div className="fs-mono" style={{ fontSize: 10, letterSpacing: ".06em", color: T.inkLow, marginTop: 10 }}>
+            {tile.image ? tile.image.split("/").pop() : "no image set"}
+          </div>
+          <div style={{ fontSize: 11.5, color: T.inkLow, marginTop: 6 }}>
+            Drop it in <span className="fs-mono" style={{ color: T.inkMid }}>public/images/services/</span>
+          </div>
+        </div>
+      )}
+
+      {/* Scrim: darkens on hover so the text stays legible over any photo. */}
+      <div className="fs-tile-scrim" />
+
+      <div className="fs-tile-body">
+        <span className="fs-tile-label fs-mono">{tile.label}</span>
+
+        <h3 className="fs-display fs-tile-title">{tile.title}</h3>
+
+        {tile.blurb && <p className="fs-tile-blurb">{tile.blurb}</p>}
+
+        {/* Collapsed to 0 height at rest; grid-template-rows animates cleanly
+            where height:auto cannot. */}
+        <div className="fs-tile-reveal">
+          <div style={{ minHeight: 0, overflow: "hidden" }}>
+            <ul className="fs-tile-points">
+              {tile.points.map((pt, j) => (
+                <li key={pt} style={{ transitionDelay: `${open ? 60 + j * 45 : 0}ms` }}>
+                  <span className="fs-tile-dot" />
+                  {pt}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---- Service photo slot ----------------------------------------------------
+   Renders the real photo when the file exists. Until then it shows the exact
+   path to drop the image at, rather than a broken-image icon or an empty box —
+   the placeholder is a set of instructions, not filler.
+   -------------------------------------------------------------------------- */
+function ServicePhoto({ src, alt, ratio = "4/3" }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) {
+    return (
+      <div style={{
+        position: "relative", width: "100%", aspectRatio: ratio, borderRadius: 14,
+        background: T.panel, border: `1px dashed ${T.ridgeHi}`,
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        gap: 10, padding: 24, textAlign: "center",
+      }}>
+        <ImageIcon size={22} color={T.goldDim} />
+        {/* Just the filename at card size — the full path is unreadable when it
+            wraps across three lines in a 257px column. */}
+        <div className="fs-mono" style={{
+          fontSize: 10, letterSpacing: ".06em", color: T.inkLow,
+          lineHeight: 1.6, wordBreak: "break-word", maxWidth: "100%",
+        }}>
+          {src ? src.split("/").pop() : "no image set"}
+        </div>
+        <div style={{ fontSize: 11.5, color: T.inkLow, maxWidth: 220, lineHeight: 1.5 }}>
+          Drop it in <span className="fs-mono" style={{ color: T.inkMid }}>public{src ? src.slice(0, src.lastIndexOf("/")) : ""}/</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position: "relative", width: "100%", aspectRatio: ratio, borderRadius: 14, overflow: "hidden", border: `1px solid ${T.ridge}` }}>
+      <img
+        src={src}
+        alt={alt}
+        onError={() => setFailed(true)}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+      />
+      {/* Keeps photographs sitting in the same tonal range as the rest of the
+          page — a bright stock image against this palette reads as pasted on. */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: `linear-gradient(180deg, rgba(7,9,13,.12) 0%, rgba(7,9,13,.42) 100%)`,
+      }} />
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ menus -- */
 
 function NavMenuItem({ item, isOpen, onOpen, onClose, onNavigate }) {
   const hasChildren = Boolean(item.items?.length);
   const [activeGroup, setActiveGroup] = useState(null);
+  const [flyTop, setFlyTop] = useState(0);
+  const listRef = useRef(null);
   // Hover menus that close the instant the cursor leaves are hostile: the gap
   // between the trigger and the panel, or a diagonal move toward a flyout,
   // both cause an accidental close. A short close delay, cancelled on
@@ -557,7 +874,7 @@ function NavMenuItem({ item, isOpen, onOpen, onClose, onNavigate }) {
         className={`fs-drop ${isOpen ? "fs-drop--on" : ""}`}
         role="menu"
       >
-        <div className="fs-drop-list">
+        <div className="fs-drop-list" ref={listRef}>
           {item.items.map((group, i) => {
             const kids = Boolean(group.items?.length);
             const on = activeGroup === group.label;
@@ -566,7 +883,17 @@ function NavMenuItem({ item, isOpen, onOpen, onClose, onNavigate }) {
                 key={group.label}
                 className={`fs-drop-item ${on ? "fs-drop-item--on" : ""}`}
                 style={{ transitionDelay: isOpen ? `${i * 28}ms` : "0ms" }}
-                onMouseEnter={() => setActiveGroup(kids ? group.label : null)}
+                onMouseEnter={(e) => {
+                  if (!kids) { setActiveGroup(null); return; }
+                  // Record where this item sits so the flyout can open level
+                  // with it. Without this the flyout is pinned to the top of
+                  // the panel, so hovering the last item throws it far above
+                  // the cursor and it cannot be reached.
+                  const li = e.currentTarget.getBoundingClientRect();
+                  const box = listRef.current?.getBoundingClientRect();
+                  setFlyTop(box ? li.top - box.top : 0);
+                  setActiveGroup(group.label);
+                }}
                 onClick={() => go(group.label)}
                 role="menuitem"
               >
@@ -577,10 +904,14 @@ function NavMenuItem({ item, isOpen, onOpen, onClose, onNavigate }) {
           })}
         </div>
 
-        {/* Flyout for the hovered group. Rendered inside the panel so the
-            cursor never has to cross a gap to reach it. */}
+        {/* Flyout for the hovered group, opened level with it. */}
         {active && (
-          <div className="fs-flyout" key={active.label}>
+          <div
+            className="fs-flyout"
+            key={active.label}
+            style={{ marginTop: flyTop }}
+            onMouseEnter={cancelClose}
+          >
             <div className="fs-flyout-head">{active.label}</div>
             {active.items.map((leaf, i) => (
               <button
@@ -1275,12 +1606,19 @@ export default function ForeSecure() {
           background: ${T.panel}; border: 1px solid ${T.ridge}; border-top: 2px solid ${T.gold};
           border-radius: 14px; box-shadow: 0 32px 80px -24px rgba(0,0,0,.88);
           padding: 10px; width: 268px; flex-shrink: 0;
+          align-self: flex-start;
         }
         .fs-flyout {
           background: ${T.panel}; border: 1px solid ${T.ridge}; border-top: 2px solid ${T.gold};
           border-radius: 14px; box-shadow: 0 32px 80px -24px rgba(0,0,0,.88);
-          padding: 14px 12px 12px; width: 300px; margin-left: 10px; flex-shrink: 0;
+          padding: 14px 12px 12px; width: 300px; flex-shrink: 0;
           animation: fs-flyin .28s cubic-bezier(.22,1,.36,1) both;
+          /* The visual 10px gap is created by a transparent border rather than
+             a margin. A margin is dead space: the cursor crossing it leaves the
+             panel entirely and the flyout closes before it can be reached. */
+          margin-left: 0;
+          border-left: 10px solid transparent;
+          background-clip: padding-box;
         }
         @keyframes fs-flyin {
           from { opacity: 0; transform: translateX(-10px) scale(.97); }
@@ -1361,6 +1699,178 @@ export default function ForeSecure() {
         .fs-g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
         .fs-g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
         .fs-split { display: grid; grid-template-columns: 1fr 1fr; }
+
+        /* Alternating photo/copy rows. Equal columns so neither side
+           dominates; collapses to a single column below 860px, where the
+           photo always leads regardless of the desktop alternation. */
+        /* Full-bleed photographic hero for service pages that supply one. */
+        .fs-hero-photo { min-height: 460px; display: flex; align-items: center; }
+        /* Matches the header's 28px gutter, so the hero copy stacks directly
+           under the logo rather than sitting on its own margin. On very wide
+           screens it eases outward slightly so the text is not pinned to the
+           glass edge. */
+        @media (min-width: 1600px) {
+          .fs-hero-photo > div:last-child { padding-left: 48px !important; }
+        }
+        /* Below ~900px the copy is wider than the horizontal scrim's dark zone
+           and starts sitting over the bright half of the photo. Swap to a flat
+           overlay there — legibility beats the gradient. */
+        @media (max-width: 900px) {
+          .fs-hero-photo { min-height: 380px; }
+          .fs-hero-photo > div[data-scrim="h"] {
+            background: rgba(7,9,13,.88) !important;
+          }
+        }
+
+        /* Two columns of points. Collapses early — at narrow widths the longer
+           entries wrap and the rules stop lining up across the pair. */
+        .fs-points-grid {
+          list-style: none; padding: 0; margin: 0;
+          display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px;
+        }
+        @media (max-width: 780px) { .fs-points-grid { grid-template-columns: 1fr; } }
+
+        /* ---- photographic tiles ---- */
+        .fs-tile-grid {
+          display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+        }
+        .fs-tile-grid > * { min-width: 0; }
+        /* Stacks at 1020px, not 900: between those widths a two-column tile is
+           only ~430px wide and its 8-point list overflows the 4:5 box when open.
+           Once stacked, the fixed ratio is dropped entirely — a wide short tile
+           cannot hold eight points on a phone, so the tile sizes to its content
+           and the image fills whatever height that produces. */
+        @media (max-width: 1020px) {
+          .fs-tile-grid { grid-template-columns: 1fr; }
+          .fs-tile { aspect-ratio: auto; min-height: 420px; }
+          .fs-tile-body { position: relative; padding-top: 180px; }
+        }
+
+        .fs-tile {
+          position: relative; overflow: hidden; border-radius: 16px;
+          aspect-ratio: 4/5; cursor: pointer; isolation: isolate;
+          border: 1px solid ${T.ridge};
+          transition: transform .5s cubic-bezier(.22,1,.36,1), border-color .4s, box-shadow .5s;
+        }
+        .fs-tile:hover, .fs-tile--open {
+          transform: translateY(-6px);
+          border-color: ${T.goldDim};
+          box-shadow: 0 30px 70px -30px rgba(0,0,0,.9);
+        }
+        .fs-tile:focus-visible { outline: 2px solid ${T.gold}; outline-offset: 3px; }
+
+        .fs-tile-img {
+          position: absolute; inset: 0; width: 100%; height: 100%;
+          object-fit: cover; display: block; z-index: 0;
+          /* The slow zoom is what makes the tile feel alive rather than static. */
+          transform: scale(1.02);
+          transition: transform 1.1s cubic-bezier(.22,1,.36,1), filter .5s ease;
+          filter: saturate(.85);
+        }
+        .fs-tile:hover .fs-tile-img, .fs-tile--open .fs-tile-img {
+          transform: scale(1.09);
+          filter: saturate(1.05);
+        }
+        .fs-tile-fallback {
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          background: ${T.panel}; text-align: center; padding: 24px;
+        }
+
+        .fs-tile-scrim {
+          position: absolute; inset: 0; z-index: 1; pointer-events: none;
+          background: linear-gradient(180deg, rgba(4,6,10,.15) 0%, rgba(4,6,10,.62) 52%, rgba(4,6,10,.93) 100%);
+          transition: opacity .45s ease;
+        }
+        .fs-tile:hover .fs-tile-scrim, .fs-tile--open .fs-tile-scrim { opacity: .96; }
+
+        .fs-tile-body {
+          position: absolute; inset: auto 0 0 0; z-index: 2;
+          padding: 30px 30px 30px; display: flex; flex-direction: column;
+          transition: transform .55s cubic-bezier(.22,1,.36,1);
+        }
+        .fs-tile-label {
+          align-self: flex-start;
+          font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+          color: #14100A; background: ${T.gold};
+          padding: 5px 11px; border-radius: 4px; font-weight: 500;
+        }
+        .fs-tile-title {
+          font-size: clamp(21px, 2.2vw, 27px); font-weight: 700; letter-spacing: -.02em;
+          line-height: 1.18; color: #fff; margin: 14px 0 0;
+        }
+        .fs-tile-blurb {
+          font-size: 14.5px; line-height: 1.6; color: rgba(255,255,255,.78);
+          margin: 12px 0 0; max-width: 42ch;
+        }
+
+        /* grid-template-rows animates between 0fr and 1fr, which height:auto
+           cannot do — this is what lets the list slide open smoothly. */
+        .fs-tile-reveal {
+          display: grid; grid-template-rows: 0fr;
+          transition: grid-template-rows .55s cubic-bezier(.22,1,.36,1);
+        }
+        .fs-tile:hover .fs-tile-reveal, .fs-tile--open .fs-tile-reveal {
+          grid-template-rows: 1fr;
+        }
+        .fs-tile-points {
+          list-style: none; padding: 0; margin: 18px 0 0;
+          border-top: 1px solid rgba(255,255,255,.16);
+        }
+        .fs-tile-points li {
+          display: flex; align-items: baseline; gap: 10px;
+          padding: 8px 0; font-size: 13.5px; line-height: 1.45;
+          color: rgba(255,255,255,.86);
+          opacity: 0; transform: translateY(10px);
+          transition: opacity .45s ease, transform .45s cubic-bezier(.22,1,.36,1);
+        }
+        .fs-tile:hover .fs-tile-points li, .fs-tile--open .fs-tile-points li {
+          opacity: 1; transform: none;
+        }
+        .fs-tile-dot {
+          width: 4px; height: 4px; border-radius: 50%; background: ${T.gold};
+          flex-shrink: 0; transform: translateY(-2px);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .fs-tile-reveal { grid-template-rows: 1fr; }
+          .fs-tile-points li { opacity: 1; transform: none; }
+        }
+
+        /* Single featured sub-service: photo and copy at equal weight. */
+        .fs-feature-row {
+          display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center;
+        }
+        .fs-feature-row > * { min-width: 0; }
+        /* One column, not two. At two columns each bullet gets ~249px, and the
+           longer ones ("Technology selection and procurement support") wrap to
+           a second line, leaving the rules across the pair misaligned. */
+        .fs-feature-points { list-style: none; padding: 0; margin: 22px 0 0; }
+        @media (max-width: 900px) {
+          .fs-feature-row { grid-template-columns: 1fr; gap: 28px; }
+        }
+
+        /* Four peers across. Cards stretch to equal height so the rules above
+           each bullet list line up across the row regardless of blurb length. */
+        .fs-card-grid {
+          display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px;
+          align-items: stretch;
+        }
+        .fs-card-grid > * { min-width: 0; height: 100%; }
+        .fs-svc-card { display: flex; flex-direction: column; height: 100%; }
+        @media (max-width: 1080px) { .fs-card-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; } }
+        @media (max-width: 620px)  { .fs-card-grid { grid-template-columns: 1fr; } }
+
+        .fs-svc-row {
+          display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center;
+        }
+        /* Grid children default to min-width:auto, which refuses to shrink below
+           their content's intrinsic width — that is what pushed the headings
+           out past their column and clipped them at the left edge. */
+        .fs-svc-row > * { min-width: 0; }
+        @media (max-width: 860px) {
+          .fs-svc-row { grid-template-columns: 1fr; gap: 24px; }
+          .fs-svc-row > * { order: unset !important; }
+        }
 
         .fs-hero-grid {
           /* The globe is the hero, so it gets the larger share. The negative
@@ -1460,8 +1970,7 @@ export default function ForeSecure() {
             ))}
             <button onClick={() => handleNavigate("Travel Tracker")} className="fs-navlink">Travel Tracker</button>
             <button onClick={() => handleNavigate("Mass Communication")} className="fs-navlink">Mass Communication</button>
-            <button onClick={() => handleNavigate("SOPs")} className="fs-navlink">SOPs</button>
-            <button onClick={() => handleNavigate("ERPs")} className="fs-navlink">ERPs</button>
+            <button onClick={() => handleNavigate("SOPs / ERPs")} className="fs-navlink">SOPs / ERPs</button>
 
             <button
               onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); }}
@@ -1513,8 +2022,7 @@ export default function ForeSecure() {
             <MobileNavAccordion menu={NAV_MENU} onNavigate={handleNavigate} />
             <button onClick={() => handleNavigate("Travel Tracker")} className="fs-navlink" style={{ padding: "12px 0", textAlign: "left" }}>Travel Tracker</button>
             <button onClick={() => handleNavigate("Mass Communication")} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left" }}>Mass Communication</button>
-            <button onClick={() => handleNavigate("SOPs")} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left" }}>SOPs</button>
-            <button onClick={() => handleNavigate("ERPs")} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left" }}>ERPs</button>
+            <button onClick={() => handleNavigate("SOPs / ERPs")} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left" }}>SOPs / ERPs</button>
             <button onClick={() => { setPage("alerts"); setSelectedAlert(null); setSelectedService(null); setMenuOpen(false); }} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left", color: T.red }}>Live alerts</button>
             <button onClick={() => { setPage("livemap"); setSelectedAlert(null); setSelectedService(null); setMenuOpen(false); }} className="fs-navlink" style={{ padding: "12px 0", display: "block", textAlign: "left", color: T.gold }}>Live location alerts</button>
           </div>
@@ -2004,9 +2512,33 @@ export default function ForeSecure() {
       {/* =========================================================== SERVICE */}
       {page === "service" && selectedService && SERVICE_CONTENT[selectedService] && (
         <>
-          <section style={{ position: "relative", overflow: "hidden", padding: "36px 0 56px" }}>
-            <div className="fs-grid-bg" style={{ position: "absolute", inset: 0, maskImage: "radial-gradient(60% 80% at 30% 20%, #000, transparent)", WebkitMaskImage: "radial-gradient(60% 80% at 30% 20%, #000, transparent)" }} />
-            <div className="fs-wrap" style={{ position: "relative", maxWidth: 1000 }}>
+          <section className={SERVICE_CONTENT[selectedService].hero ? "fs-hero-photo" : ""}
+                   style={{ position: "relative", overflow: "hidden", padding: SERVICE_CONTENT[selectedService].hero ? "72px 0 88px" : "36px 0 56px" }}>
+            {SERVICE_CONTENT[selectedService].hero ? (
+              /* Photographic hero: the image sits behind the copy rather than
+                 beside it. Two scrims do the work — a horizontal one so the
+                 text side stays dark enough to read, and a vertical one to
+                 blend the bottom edge into the page. */
+              <>
+                <HeroImage src={SERVICE_CONTENT[selectedService].hero} />
+                <div data-scrim="h" style={{ position: "absolute", inset: 0, background: `linear-gradient(90deg, ${T.void} 0%, rgba(7,9,13,.94) 34%, rgba(7,9,13,.55) 68%, rgba(7,9,13,.35) 100%)` }} />
+                <div style={{ position: "absolute", inset: 0, background: `linear-gradient(180deg, rgba(7,9,13,.55) 0%, transparent 26%, transparent 62%, ${T.void} 100%)` }} />
+              </>
+            ) : (
+              <div className="fs-grid-bg" style={{ position: "absolute", inset: 0, maskImage: "radial-gradient(60% 80% at 30% 20%, #000, transparent)", WebkitMaskImage: "radial-gradient(60% 80% at 30% 20%, #000, transparent)" }} />
+            )}
+            {/* A photographic hero is full-bleed, so its copy is left-aligned to
+                the page edge like the header rather than centred in a 1160px
+                container — centred text against a bleeding image reads as
+                stranded in the middle of the screen. */}
+            <div
+              className={SERVICE_CONTENT[selectedService].hero ? "" : "fs-wrap"}
+              style={
+                SERVICE_CONTENT[selectedService].hero
+                  ? { position: "relative", width: "100%", padding: "0 28px" }
+                  : { position: "relative", maxWidth: 1000 }
+              }
+            >
               <button onClick={() => { setPage("home"); setSelectedService(null); }} className="fs-navlink"
                 style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 26, fontWeight: 600 }}>
                 <ArrowRight size={14} style={{ transform: "rotate(180deg)" }} /> Home
@@ -2016,22 +2548,24 @@ export default function ForeSecure() {
 
               <Reveal>
                 <Eyebrow>{SERVICE_CONTENT[selectedService].category}</Eyebrow>
-                <h1 className="fs-display" style={{ fontSize: "clamp(32px,4.4vw,52px)", fontWeight: 700, letterSpacing: "-.032em", marginTop: 18, lineHeight: 1.06, maxWidth: 800 }}>
-                  {selectedService}
+                <h1 className="fs-display" style={{ fontSize: "clamp(32px,4.4vw,52px)", fontWeight: 700, letterSpacing: "-.032em", marginTop: 18, lineHeight: 1.06, maxWidth: SERVICE_CONTENT[selectedService].hero ? 620 : 800 }}>
+                  {SERVICE_CONTENT[selectedService].title || selectedService}
                 </h1>
-                <p style={{ fontSize: 18.5, color: T.inkMid, marginTop: 20, lineHeight: 1.6, maxWidth: 620 }}>
+                <p style={{ fontSize: 18.5, color: T.inkMid, marginTop: 20, lineHeight: 1.6, maxWidth: SERVICE_CONTENT[selectedService].hero ? 540 : 620 }}>
                   {SERVICE_CONTENT[selectedService].summary}
                 </p>
-                <button className="fs-btn" style={{ marginTop: 28 }} onClick={handleGoToBriefing}>
-                  Request a briefing <ArrowRight size={15} />
-                </button>
               </Reveal>
             </div>
           </section>
 
-          <section className="fs-wrap" style={{ maxWidth: 1000 }}>
-            <Reveal><ContourArt seed={selectedService.length % 7} height={260} /></Reveal>
-          </section>
+          {/* The abstract banner is a stand-in for imagery. A page with a real
+              photographic hero already has its image, so showing both reads as
+              two banners stacked. */}
+          {!SERVICE_CONTENT[selectedService].hero && (
+            <section className="fs-wrap" style={{ maxWidth: 1000 }}>
+              <Reveal><ContourArt seed={selectedService.length % 7} height={260} /></Reveal>
+            </section>
+          )}
 
           <section className="fs-wrap" style={{ maxWidth: 1000, paddingTop: 52 }}>
             <div className="fs-service-layout" style={{ display: "grid", gridTemplateColumns: "1fr 250px", gap: 52 }}>
@@ -2054,6 +2588,7 @@ export default function ForeSecure() {
                     {(SERVICE_CONTENT[selectedService].body || []).map((p, i) => (
                       <p key={i} style={{ fontSize: 16.5, color: T.inkMid, lineHeight: 1.82 }}>{p}</p>
                     ))}
+
                   </div>
                 )}
               </Reveal>
@@ -2081,24 +2616,203 @@ export default function ForeSecure() {
             </div>
           </section>
 
-          <section className="fs-wrap" style={{ maxWidth: 1000, paddingTop: 88, paddingBottom: 100 }}>
-            <Reveal>
-              <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", border: `1px solid ${T.ridge}`, background: T.hull, padding: "42px 40px", display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center", justifyContent: "space-between" }}>
-                <div className="fs-grid-bg" style={{ position: "absolute", inset: 0, opacity: .22 }} />
-                <div style={{ position: "relative", maxWidth: 460 }}>
-                  <h3 className="fs-display" style={{ fontSize: 23, fontWeight: 700, letterSpacing: "-.025em", lineHeight: 1.25 }}>
-                    Want to see this applied to your organization?
-                  </h3>
-                  <p style={{ color: T.inkMid, fontSize: 14.5, marginTop: 10, lineHeight: 1.6 }}>
-                    An analyst will walk through what this looks like for your sites and your people specifically.
-                  </p>
+          {/* Sub-services get their own full-width section. Nested inside the
+              1fr/250px body grid they were squeezed to ~299px per side, which
+              clipped the headings and shrank the photos. */}
+          {/* Flat points list, for a service with no sub-services to split into.
+              Two columns so seven items read as a block rather than a column
+              running down one side of an empty page. */}
+          {(SERVICE_CONTENT[selectedService].points || []).length > 0 && (
+            <section className="fs-wrap" style={{ maxWidth: 1000, paddingTop: 8 }}>
+              <Reveal>
+                <div className="fs-mono" style={{ fontSize: 10.5, letterSpacing: ".16em", textTransform: "uppercase", color: T.gold, paddingBottom: 18 }}>
+                  What this covers
                 </div>
-                <button className="fs-btn" style={{ position: "relative", flexShrink: 0 }} onClick={handleGoToBriefing}>
-                  Request a briefing <ArrowRight size={15} />
-                </button>
+              </Reveal>
+              <ul className="fs-points-grid">
+                {SERVICE_CONTENT[selectedService].points.map((pt, j) => (
+                  <RevealItem key={pt} delay={j * 60}>
+                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.gold, flexShrink: 0, transform: "translateY(-2px)" }} />
+                    {pt}
+                  </RevealItem>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* Tile variant: copy sits on the image and lifts on hover. Two large
+              tiles rather than a grid of small ones, so the photography carries
+              weight instead of acting as a thumbnail. */}
+          {(SERVICE_CONTENT[selectedService].tiles || []).length > 0 && (
+            <section className="fs-wrap" style={{ maxWidth: 1160, paddingTop: 28 }}>
+              <div className="fs-tile-grid">
+                {SERVICE_CONTENT[selectedService].tiles.map((tile, i) => (
+                  <Reveal key={tile.label} delay={i * 110} from={i === 0 ? "left" : "right"}>
+                    <ServiceTile tile={tile} />
+                  </Reveal>
+                ))}
               </div>
-            </Reveal>
-          </section>
+            </section>
+          )}
+
+          {/* Feature variant: a single sub-service, given the full width. With
+              only one item there is nothing to compare it against, so a grid
+              would just leave three empty columns. */}
+          {SERVICE_CONTENT[selectedService].feature && (
+            <section className="fs-wrap" style={{ maxWidth: 1160, paddingTop: 28 }}>
+              <div className="fs-feature-row">
+                <Reveal from="left">
+                  <ServicePhoto
+                    src={SERVICE_CONTENT[selectedService].feature.image}
+                    alt={SERVICE_CONTENT[selectedService].feature.title}
+                    ratio="4/3"
+                  />
+                </Reveal>
+
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                  <Reveal from="right" delay={90}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <span style={{ width: 30, height: 1, background: T.goldDim, flexShrink: 0 }} />
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, flexShrink: 0 }} />
+                      <span className="fs-mono" style={{ fontSize: 10.5, letterSpacing: ".16em", textTransform: "uppercase", color: T.gold }}>
+                        {SERVICE_CONTENT[selectedService].feature.tag}
+                      </span>
+                    </div>
+
+                    <h3 className="fs-display" style={{
+                      fontSize: "clamp(28px, 3.2vw, 40px)", fontWeight: 700,
+                      letterSpacing: "-.028em", marginTop: 16, lineHeight: 1.12, color: T.ink,
+                    }}>
+                      {SERVICE_CONTENT[selectedService].feature.title}
+                    </h3>
+
+                    {SERVICE_CONTENT[selectedService].feature.blurb && (
+                      <p style={{ fontSize: 16.5, color: T.inkMid, marginTop: 16, lineHeight: 1.68 }}>
+                        {SERVICE_CONTENT[selectedService].feature.blurb}
+                      </p>
+                    )}
+                  </Reveal>
+
+                  <ul className="fs-feature-points">
+                    {SERVICE_CONTENT[selectedService].feature.points.map((pt, j) => (
+                      <RevealItem key={pt} delay={180 + j * 60}>
+                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: T.gold, flexShrink: 0, transform: "translateY(-2px)" }} />
+                        {pt}
+                      </RevealItem>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Card grid variant: four sub-services scanned side by side. Used
+              where the items are peers of equal weight, rather than a sequence
+              worth walking through one at a time. */}
+          {(SERVICE_CONTENT[selectedService].cards || []).length > 0 && (
+            <section className="fs-wrap" style={{ maxWidth: 1160, paddingTop: 24 }}>
+              <div className="fs-card-grid">
+                {SERVICE_CONTENT[selectedService].cards.map((card, i) => (
+                  <Reveal key={card.tag} delay={i * 90} from="up">
+                    <div className="fs-svc-card">
+                      <ServicePhoto src={card.image} alt={card.tag} ratio="4/3" />
+
+                      <div className="fs-mono" style={{
+                        fontSize: 10, letterSpacing: ".15em", textTransform: "uppercase",
+                        color: T.gold, marginTop: 18,
+                      }}>
+                        {card.tag}
+                      </div>
+
+                      {card.blurb && (
+                        <p style={{ fontSize: 15, color: T.ink, marginTop: 10, lineHeight: 1.45, fontWeight: 500 }}>
+                          {card.blurb}
+                        </p>
+                      )}
+
+                      <ul style={{ listStyle: "none", padding: 0, margin: "16px 0 0" }}>
+                        {card.points.map((pt) => (
+                          <li key={pt} style={{
+                            display: "flex", alignItems: "baseline", gap: 10,
+                            padding: "8px 0", borderTop: `1px solid ${T.ridge}`,
+                            fontSize: 13.5, color: T.inkMid, lineHeight: 1.5,
+                          }}>
+                            <span style={{ width: 4, height: 4, borderRadius: "50%", background: T.goldDim, flexShrink: 0, transform: "translateY(-2px)" }} />
+                            {pt}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Reveal>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {(SERVICE_CONTENT[selectedService].sections || []).length > 0 && (
+            <section className="fs-wrap" style={{ maxWidth: 1160, paddingTop: 20 }}>
+          {/* Sub-services: photo on one side, copy on the other,
+              alternating down the page. Each side animates in from
+              its own edge, and the bullets stagger after the heading
+              so the block assembles rather than just appearing. */}
+          {(SERVICE_CONTENT[selectedService].sections || []).map((sec, i) => {
+            const flipped = i % 2 === 1;
+            return (
+              <div key={sec.title} className="fs-svc-row" style={{ marginTop: i === 0 ? 34 : 76 }}>
+                {/* photo */}
+                <Reveal
+                  from={flipped ? "right" : "left"}
+                  style={{ order: flipped ? 2 : 1 }}
+                >
+                  <ServicePhoto src={sec.image} alt={sec.title} />
+                </Reveal>
+
+                {/* copy */}
+                <div style={{ order: flipped ? 1 : 2, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                  <Reveal from={flipped ? "left" : "right"} delay={90}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <span style={{ width: 30, height: 1, background: T.goldDim, flexShrink: 0 }} />
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.gold, flexShrink: 0 }} />
+                      <span className="fs-mono" style={{ fontSize: 10, letterSpacing: ".16em", textTransform: "uppercase", color: T.gold }}>
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                    </div>
+
+                    <h3 className="fs-display" style={{
+                      fontSize: "clamp(26px, 2.9vw, 36px)", fontWeight: 700,
+                      letterSpacing: "-.025em", marginTop: 16, lineHeight: 1.15, color: T.ink,
+                    }}>
+                      {sec.title}
+                    </h3>
+
+                    {sec.blurb && (
+                      <p style={{ fontSize: 16.5, color: T.inkMid, marginTop: 14, lineHeight: 1.62 }}>{sec.blurb}</p>
+                    )}
+                  </Reveal>
+
+                  {/* The stagger lives on RevealItem, which renders the
+                      <li> itself. Wrapping each <li> in a Reveal <div>
+                      would break the ul > li relationship — invalid
+                      markup, and screen readers stop announcing it as
+                      a list. */}
+                  <ul style={{ listStyle: "none", padding: 0, margin: "22px 0 0" }}>
+                    {sec.points.map((pt, j) => (
+                      <RevealItem key={pt} delay={180 + j * 70}>
+                        <span style={{ width: 4, height: 4, borderRadius: "50%", background: T.gold, flexShrink: 0, transform: "translateY(-2px)" }} />
+                        {pt}
+                      </RevealItem>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          })}
+            </section>
+          )}
+
+          {/* With the CTA panel gone the last content block would butt straight
+              into the footer. */}
+          <div style={{ height: 90 }} />
         </>
       )}
 
