@@ -659,7 +659,36 @@ function ContourArt({ seed = 1, height = 240, accent = T.gold }) {
 // page background rather than showing a broken-image box behind the copy.
 function HeroImage({ src }) {
   const [failed, setFailed] = useState(false);
-  if (failed) return null;
+
+  // Failing silently to a dark background looks intentional, which is the
+  // problem: there is then nothing on screen telling you which file is
+  // missing. Show the expected filename instead, low-contrast enough that it
+  // reads as scaffolding rather than content.
+  if (failed) {
+    return (
+      <div className="fs-hero-missing" style={{
+        position: "absolute", inset: 0, display: "flex",
+        alignItems: "center", justifyContent: "flex-end",
+        padding: "0 40px", pointerEvents: "none",
+      }}>
+        <div style={{
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+          padding: "26px 30px", borderRadius: 14,
+          border: `1px dashed ${T.ridgeHi}`, background: "rgba(17,21,30,.55)",
+          textAlign: "center",
+        }}>
+          <ImageIcon size={22} color={T.goldDim} />
+          <div className="fs-mono" style={{ fontSize: 11, letterSpacing: ".04em", color: T.gold }}>
+            {src.split("/").pop()}
+          </div>
+          <div style={{ fontSize: 11.5, color: T.inkLow }}>
+            Drop it in <span className="fs-mono" style={{ color: T.inkMid }}>public/images/services/</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <img
       src={src}
@@ -692,7 +721,7 @@ function ServiceTile({ tile }) {
 
   return (
     <div
-      className={`fs-tile ${open ? "fs-tile--open" : ""}`}
+      className={`fs-tile ${open ? "fs-tile--open" : ""} ${hasImage ? "" : "fs-tile--noimg"}`}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
       onFocus={() => setOpen(true)}
@@ -711,12 +740,12 @@ function ServiceTile({ tile }) {
         />
       ) : (
         <div className="fs-tile-img fs-tile-fallback">
-          <ImageIcon size={24} color={T.goldDim} />
-          <div className="fs-mono" style={{ fontSize: 10, letterSpacing: ".06em", color: T.inkLow, marginTop: 10 }}>
+          <ImageIcon size={26} color={T.goldDim} />
+          <div className="fs-mono" style={{ fontSize: 11.5, letterSpacing: ".04em", color: T.gold, marginTop: 12 }}>
             {tile.image ? tile.image.split("/").pop() : "no image set"}
           </div>
-          <div style={{ fontSize: 11.5, color: T.inkLow, marginTop: 6 }}>
-            Drop it in <span className="fs-mono" style={{ color: T.inkMid }}>public/images/services/</span>
+          <div style={{ fontSize: 11.5, color: T.inkMid, marginTop: 8, lineHeight: 1.5 }}>
+            Drop it in <span className="fs-mono" style={{ color: T.ink }}>public/images/services/</span>
           </div>
         </div>
       )}
@@ -1705,6 +1734,9 @@ export default function ForeSecure() {
            photo always leads regardless of the desktop alternation. */
         /* Full-bleed photographic hero for service pages that supply one. */
         .fs-hero-photo { min-height: 460px; display: flex; align-items: center; }
+        /* Below 960px the copy is wide enough to run under this, and it is
+           scaffolding rather than content — hide it rather than let it collide. */
+        @media (max-width: 960px) { .fs-hero-missing { display: none !important; } }
         /* Matches the header's 28px gutter, so the hero copy stacks directly
            under the logo rather than sitting on its own margin. On very wide
            screens it eases outward slightly so the text is not pinned to the
@@ -1772,9 +1804,21 @@ export default function ForeSecure() {
           filter: saturate(1.05);
         }
         .fs-tile-fallback {
-          display: flex; flex-direction: column; align-items: center; justify-content: center;
-          background: ${T.panel}; text-align: center; padding: 24px;
+          display: flex; flex-direction: column; align-items: center;
+          /* Sits in the upper area so the copy block below never covers it. */
+          justify-content: flex-start; padding: 48px 24px 24px;
+          background: ${T.panel}; text-align: center;
+          border-bottom: 1px dashed ${T.ridgeHi};
         }
+        /* Without an image the scrim has nothing to darken — it only buried the
+           placeholder, which is meant to be read. Drop it, and mute the copy so
+           the instructions are the most legible thing on the tile. */
+        .fs-tile--noimg .fs-tile-scrim { display: none; }
+        .fs-tile--noimg { background: ${T.panel}; }
+        .fs-tile--noimg .fs-tile-title { color: ${T.ink}; }
+        .fs-tile--noimg .fs-tile-blurb { color: ${T.inkMid}; }
+        .fs-tile--noimg .fs-tile-points { border-top-color: ${T.ridge}; }
+        .fs-tile--noimg .fs-tile-points li { color: ${T.inkMid}; }
 
         .fs-tile-scrim {
           position: absolute; inset: 0; z-index: 1; pointer-events: none;
