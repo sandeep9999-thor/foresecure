@@ -49,25 +49,21 @@ const DOMAINS = [
     icon: Plane,
     title: "Travel risk",
     desc: "Itineraries sync from your travel provider at booking. Origin, transit, and destination are all watched — nobody goes dark between legs.",
-    metric: "6,200+", metricLabel: "itineraries under watch",
   },
   {
     icon: CloudLightning,
     title: "Weather & hazards",
     desc: "Storm, flood, wildfire, and seismic activity scored against your exact site footprint rather than a whole region.",
-    metric: "< 90s", metricLabel: "from detection to alert",
   },
   {
     icon: ShieldAlert,
     title: "Unrest & security",
     desc: "Protest movement, transit disruption, and security incidents ranked by proximity to your people and confirmed before dispatch.",
-    metric: "2 sources", metricLabel: "minimum before we send",
   },
   {
     icon: HeartPulse,
     title: "Health advisories",
     desc: "Outbreak surveillance and verified medical guidance for personnel deployed outside their home territory.",
-    metric: "24/7", metricLabel: "analyst coverage",
   },
 ];
 
@@ -78,19 +74,6 @@ const ESCALATION = [
   { n: "03", title: "Scope", body: "We resolve who is actually exposed — which travelers, which sites, which radius. Not the whole company." },
   { n: "04", title: "Dispatch", body: "Alert goes to exactly those people, on the channels they'll see, with the action you want them to take." },
   { n: "05", title: "Account", body: "Two-way check-in confirms who is safe. The gaps are the only thing your desk has to chase." },
-];
-
-const trustedByStats = [
-  { fig: "8/10",   label: "top logistics networks run on ForeSecure" },
-  { fig: "2003",   label: "year the watch desk stood up" },
-  { fig: "140+",   label: "field analysts and regional specialists" },
-  { fig: "6,200+", label: "sites and itineraries under active watch" },
-];
-
-const insightsArticles = [
-  { tag: "Weather",  date: "Jun 28, 2026", title: "Why cyclone lead-time is shrinking across the Bay of Bengal", read: "6 min" },
-  { tag: "Security", date: "Jun 21, 2026", title: "Reading unrest indicators before a protest becomes a shutdown", read: "5 min" },
-  { tag: "Travel",   date: "Jun 14, 2026", title: "The itinerary gap: why most duty-of-care programs miss layovers", read: "4 min" },
 ];
 
 /* ------------------------------------------------------------------- nav -- */
@@ -119,16 +102,6 @@ const NAV_MENU = [
           { label: "Disaster Risk Management" },
           { label: "Carbon Footprint Assessment" },
           { label: "Hydrological Assessment and Water Related Services" },
-        ],
-      },
-      { label: "Geospatial Solutions" },
-      { label: "Investigations" },
-      {
-        label: "Others",
-        items: [
-          { label: "Counter Drone Consulting" },
-          { label: "Vehicle Dynamics Assessment (VDA) / Hostile Vehicle Attack Assessment" },
-          { label: "Assessment of Blast / Explosive / High Impact Risk" },
         ],
       },
     ],
@@ -237,41 +210,6 @@ const SERVICE_CONTENT = {
       "Water is a two-sided risk: too much of it floods a site, too little disrupts operations that depend on it. We model local hydrology, flood exposure, and water availability to help clients plan facilities, insurance, and continuity measures around the water risk specific to their location.",
     ],
   },
-  "Geospatial Solutions": {
-    category: "Consulting",
-    summary: "Putting risk on a map, literally.",
-    body: [
-      "Spreadsheets don't show you that three suppliers sit in the same flood plain. Our geospatial team layers threat data, asset locations, and terrain analysis onto interactive maps, so patterns that are invisible in a table become obvious at a glance — and decisions about where to build, route, or evacuate get easier to make.",
-    ],
-  },
-  "Investigations": {
-    category: "Consulting",
-    summary: "Finding out what actually happened, discreetly and defensibly.",
-    body: [
-      "Fraud, IP theft, insider misconduct, and vendor due diligence all call for investigative work that can withstand later scrutiny — whether that's an internal disciplinary process, a court case, or a regulator's questions. Our investigators combine fieldwork with digital forensics and background research to build findings a client can act on with confidence.",
-    ],
-  },
-  "Counter Drone Consulting": {
-    category: "Others",
-    summary: "Defending airspace that most security plans still ignore.",
-    body: [
-      "Unauthorized drones can carry cameras, payloads, or simply disrupt operations at airports, stadiums, and industrial sites. We assess a site's exposure to drone-based threats and design detection and mitigation strategies — sensor placement, response protocols, and coordination with local authorities — suited to what's actually flying overhead.",
-    ],
-  },
-  "Vehicle Dynamics Assessment (VDA) / Hostile Vehicle Attack Assessment": {
-    category: "Others",
-    summary: "Stress-testing a site against a vehicle used as a weapon.",
-    body: [
-      "Vehicle-borne attacks on crowded or high-value sites are a recognized and studied threat. We assess approach routes, speeds, and barrier performance to determine whether a site's perimeter can actually stop or slow a hostile vehicle, and recommend the bollards, planters, or standoff distances that close the gap.",
-    ],
-  },
-  "Assessment of Blast / Explosive / High Impact Risk": {
-    category: "Others",
-    summary: "Understanding what an explosion would do to a structure — before it happens.",
-    body: [
-      "We model blast loads and structural response to identify which parts of a building are most vulnerable to an explosive event, and recommend hardening measures — from glazing upgrades to structural reinforcement — that reduce injury and damage if the worst occurs.",
-    ],
-  },
   "Resourcing": {
     category: "Resourcing",
     summary: "Embedded security talent, without running a security recruitment desk.",
@@ -374,21 +312,76 @@ function useReveal() {
   return [ref, visible];
 }
 
-function Reveal({ children, delay = 0, style = {} }) {
+// Directional scroll reveal. `from` picks the axis the content travels along:
+// "up" (default), "left", "right", or "scale". Distance is deliberately modest —
+// large travel reads as a slideshow rather than as the page settling into place.
+const OFFSETS = {
+  up:    "translate3d(0, 26px, 0)",
+  left:  "translate3d(-42px, 0, 0)",
+  right: "translate3d(42px, 0, 0)",
+  scale: "scale(.94)",
+};
+
+function Reveal({ children, delay = 0, from = "up", style = {} }) {
   const [ref, visible] = useReveal();
+  const reduced = typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   return (
     <div
       ref={ref}
-      className="fs-reveal"
       style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(20px)",
-        transition: `opacity .7s cubic-bezier(.22,1,.36,1) ${delay}ms, transform .7s cubic-bezier(.22,1,.36,1) ${delay}ms`,
+        opacity: visible || reduced ? 1 : 0,
+        transform: visible || reduced ? "none" : (OFFSETS[from] || OFFSETS.up),
+        transition: reduced ? "none" :
+          `opacity .8s cubic-bezier(.22,1,.36,1) ${delay}ms, transform .8s cubic-bezier(.22,1,.36,1) ${delay}ms`,
+        willChange: visible ? "auto" : "opacity, transform",
         ...style,
       }}
     >
       {children}
     </div>
+  );
+}
+
+// Splits a heading into words and floats each one up in sequence. Used only on
+// the largest headings — applied everywhere it would be noise rather than
+// polish, and it costs a span per word.
+function RevealWords({ text, className, style, delay = 0, stagger = 55 }) {
+  const [ref, visible] = useReveal();
+  const reduced = typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const words = String(text).split(" ");
+
+  return (
+    <span ref={ref} className={className} style={{ display: "inline-block", ...style }}>
+      {words.map((w, i) => (
+        // The mask needs vertical breathing room: with a tight line-height the
+        // glyph box (ascender + descender) is taller than the line box, so a
+        // flush overflow:hidden shears the tails off g, y, p, and q. Padding
+        // opens the mask; the matching negative margin keeps layout identical.
+        <span
+          key={i}
+          style={{
+            display: "inline-block", overflow: "hidden", verticalAlign: "top",
+            padding: "0.18em 0 0.22em", margin: "-0.18em 0 -0.22em",
+          }}
+        >
+          <span
+            style={{
+              display: "inline-block",
+              transform: visible || reduced ? "none" : "translateY(105%)",
+              opacity: visible || reduced ? 1 : 0,
+              transition: reduced ? "none" :
+                `transform .75s cubic-bezier(.22,1,.36,1) ${delay + i * stagger}ms, opacity .75s ease ${delay + i * stagger}ms`,
+            }}
+          >
+            {w}
+          </span>
+          {i < words.length - 1 && <span>&nbsp;</span>}
+        </span>
+      ))}
+    </span>
   );
 }
 
@@ -484,55 +477,115 @@ function ContourArt({ seed = 1, height = 240, accent = T.gold }) {
 
 /* ------------------------------------------------------------------ menus -- */
 
-function NavMenuItem({ item, isOpen, onToggle, onNavigate }) {
+function NavMenuItem({ item, isOpen, onOpen, onClose, onNavigate }) {
   const hasChildren = Boolean(item.items?.length);
+  const [activeGroup, setActiveGroup] = useState(null);
+  // Hover menus that close the instant the cursor leaves are hostile: the gap
+  // between the trigger and the panel, or a diagonal move toward a flyout,
+  // both cause an accidental close. A short close delay, cancelled on
+  // re-entry, makes the whole thing forgiving.
+  const closeTimer = useRef(null);
+
+  const cancelClose = () => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  };
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimer.current = setTimeout(() => {
+      onClose();
+      setActiveGroup(null);
+    }, 220);
+  };
+
+  useEffect(() => cancelClose, []);
+  useEffect(() => { if (!isOpen) setActiveGroup(null); }, [isOpen]);
+
+  const go = (label) => {
+    cancelClose();
+    setActiveGroup(null);
+    onNavigate(label);
+  };
+
+  if (!hasChildren) {
+    return (
+      <button onClick={() => onNavigate(item.label)} className="fs-navlink">
+        {item.label}
+      </button>
+    );
+  }
+
+  const active = item.items.find((g) => g.label === activeGroup);
+
   return (
-    <div style={{ position: "relative" }}>
+    <div
+      style={{ position: "relative" }}
+      onMouseEnter={() => { cancelClose(); onOpen(); }}
+      onMouseLeave={scheduleClose}
+    >
       <button
-        onClick={hasChildren ? onToggle : () => onNavigate(item.label)}
+        onClick={() => (isOpen ? onClose() : onOpen())}
         className="fs-navlink"
-        style={{ display: "flex", alignItems: "center", gap: 5, color: isOpen ? T.ink : T.inkMid }}
+        style={{ display: "flex", alignItems: "center", gap: 5, color: isOpen ? T.gold : T.inkMid }}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
       >
         {item.label}
-        {hasChildren && <ChevronDown size={13} style={{ transition: "transform .25s", transform: isOpen ? "rotate(180deg)" : "none" }} />}
+        <ChevronDown
+          size={13}
+          style={{ transition: "transform .3s cubic-bezier(.22,1,.36,1)", transform: isOpen ? "rotate(180deg)" : "none" }}
+        />
       </button>
 
-      {hasChildren && (
-        <div
-          className="fs-mega"
-          style={{
-            position: "absolute", top: "calc(100% + 20px)", left: "50%",
-            transform: isOpen ? "translate(-50%,0)" : "translate(-50%,-10px)",
-            opacity: isOpen ? 1 : 0,
-            pointerEvents: isOpen ? "auto" : "none",
-            transition: "opacity .24s ease, transform .24s cubic-bezier(.22,1,.36,1)",
-          }}
-        >
-          <div className="fs-mega-grid">
-            {item.items.map((group) => {
-              const kids = Boolean(group.items?.length);
-              return (
-                <div key={group.label} style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  {kids ? (
-                    <>
-                      <div className="fs-mega-head">{group.label}</div>
-                      {group.items.map((leaf) => (
-                        <button key={leaf.label} className="fs-droplink" onClick={() => onNavigate(leaf.label)}>
-                          {leaf.label}
-                        </button>
-                      ))}
-                    </>
-                  ) : (
-                    <button className="fs-droplink fs-droplink--top" onClick={() => onNavigate(group.label)}>
-                      {group.label}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+      {/* Bridges the gap between trigger and panel so a downward cursor move
+          never passes through dead space and closes the menu. */}
+      <div style={{ position: "absolute", top: "100%", left: 0, right: 0, height: 18, pointerEvents: isOpen ? "auto" : "none" }} />
+
+      <div
+        className={`fs-drop ${isOpen ? "fs-drop--on" : ""}`}
+        role="menu"
+      >
+        <div className="fs-drop-list">
+          {item.items.map((group, i) => {
+            const kids = Boolean(group.items?.length);
+            const on = activeGroup === group.label;
+            return (
+              <button
+                key={group.label}
+                className={`fs-drop-item ${on ? "fs-drop-item--on" : ""}`}
+                style={{ transitionDelay: isOpen ? `${i * 28}ms` : "0ms" }}
+                onMouseEnter={() => setActiveGroup(kids ? group.label : null)}
+                onClick={() => go(group.label)}
+                role="menuitem"
+              >
+                <span>{group.label}</span>
+                {kids && <ChevronRight size={13} style={{ flexShrink: 0, opacity: on ? 1 : .45 }} />}
+              </button>
+            );
+          })}
         </div>
-      )}
+
+        {/* Flyout for the hovered group. Rendered inside the panel so the
+            cursor never has to cross a gap to reach it. */}
+        {active && (
+          <div className="fs-flyout" key={active.label}>
+            <div className="fs-flyout-head">{active.label}</div>
+            {active.items.map((leaf, i) => (
+              <button
+                key={leaf.label}
+                className="fs-drop-item"
+                style={{ animationDelay: `${i * 35}ms` }}
+                onClick={() => go(leaf.label)}
+                role="menuitem"
+              >
+                {leaf.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -782,6 +835,111 @@ function DeleteAdvisoryModal({ target, password, setPassword, submitting, error,
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- escalation --
+   The spine fills as you scroll and each step lights when the fill reaches it,
+   so the light visibly travels 01 -> 05. Driven by scroll position rather than
+   a timer: the animation tracks the reader instead of running ahead of them.
+   ---------------------------------------------------------------------------- */
+function EscalationPath({ steps }) {
+  const wrapRef = useRef(null);
+  const [progress, setProgress] = useState(0);   // 0..1 down the spine
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setProgress(1);
+      return;
+    }
+
+    let ticking = false;
+    const compute = () => {
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // Start filling once the block's top passes 78% of the viewport, and
+      // finish by the time its bottom reaches 45%. Those bounds mean the fill
+      // completes while the list is still comfortably on screen.
+      const start = vh * 0.78;
+      const end = vh * 0.45;
+      const p = (start - r.top) / Math.max(1, (r.height + start - end));
+      setProgress(Math.max(0, Math.min(1, p)));
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (!ticking) { ticking = true; requestAnimationFrame(compute); }
+    };
+
+    compute();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  const n = steps.length;
+
+  return (
+    <div ref={wrapRef} style={{ marginTop: 48, position: "relative" }}>
+      {/* dim spine */}
+      <div style={{
+        position: "absolute", left: 25, top: 12, bottom: 12, width: 2,
+        background: T.ridge, borderRadius: 2,
+      }} />
+
+      {/* lit spine — height tracks scroll, with a bright head at the leading edge */}
+      <div style={{
+        position: "absolute", left: 25, top: 12, width: 2,
+        height: `calc(${progress * 100}% - 24px * ${progress})`,
+        background: `linear-gradient(180deg, ${T.gold} 0%, ${T.gold} 85%, #FFF1C9 100%)`,
+        borderRadius: 2,
+        boxShadow: `0 0 12px ${T.gold}, 0 0 28px rgba(212,169,71,.45)`,
+        transition: "height .15s linear",
+      }} />
+
+      {steps.map((s, i) => {
+        // A step lights when the fill has passed its own position on the spine.
+        const threshold = n === 1 ? 0 : i / (n - 1) * 0.92;
+        const lit = progress >= threshold;
+        return (
+          <div key={s.n} style={{
+            display: "flex", gap: 26,
+            paddingBottom: i === n - 1 ? 0 : 30,
+            position: "relative",
+          }}>
+            <div style={{
+              width: 50, height: 50, borderRadius: "50%", flexShrink: 0, zIndex: 1,
+              background: lit ? "rgba(212,169,71,.12)" : T.hull,
+              border: `1px solid ${lit ? T.gold : T.ridgeHi}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: lit ? `0 0 22px rgba(212,169,71,.35)` : "none",
+              transform: lit ? "scale(1.06)" : "scale(1)",
+              transition: "background .45s ease, border-color .45s ease, box-shadow .5s ease, transform .5s cubic-bezier(.34,1.56,.64,1)",
+            }}>
+              <span className="fs-mono" style={{
+                fontSize: 13, fontWeight: 500,
+                color: lit ? T.gold : T.inkLow,
+                transition: "color .45s ease",
+              }}>{s.n}</span>
+            </div>
+
+            <div style={{
+              paddingTop: 10, maxWidth: 620,
+              opacity: lit ? 1 : 0.42,
+              transform: lit ? "none" : "translateX(-10px)",
+              transition: "opacity .55s ease, transform .55s cubic-bezier(.22,1,.36,1)",
+            }}>
+              <h3 className="fs-display" style={{ fontSize: 19, fontWeight: 600, letterSpacing: "-.015em" }}>{s.title}</h3>
+              <p style={{ fontSize: 14.5, color: T.inkMid, marginTop: 8, lineHeight: 1.65 }}>{s.body}</p>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -1083,17 +1241,58 @@ export default function ForeSecure() {
         @keyframes fs-ping { 75%,100% { transform: scale(2.6); opacity: 0; } }
         @keyframes fs-fade-up { from { opacity:0; transform: translateY(24px);} to {opacity:1; transform:none;} }
 
-        /* ---- mega menu ---- */
-        .fs-mega {
-          background: ${T.panel}; border: 1px solid ${T.ridge}; border-top: 2px solid ${T.gold};
-          border-radius: 14px; box-shadow: 0 32px 80px -24px rgba(0,0,0,.85);
-          padding: 28px 30px; width: min(780px, 90vw); z-index: 60;
+        /* ---- dropdown ---- */
+        .fs-drop {
+          /* Anchored left, not centred. A centred panel grows outward in both
+             directions when the flyout opens, sliding the list ~156px sideways
+             out from under the cursor. Anchoring the left edge means the list
+             stays put and only the flyout appears beside it. */
+          position: absolute; top: calc(100% + 18px); left: -14px;
+          display: flex; align-items: flex-start; z-index: 60;
+          transform: translateY(-8px) scale(.97);
+          transform-origin: top left;
+          opacity: 0; pointer-events: none;
+          transition: opacity .2s ease, transform .34s cubic-bezier(.34,1.56,.64,1);
         }
-        .fs-mega-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px 28px; }
-        .fs-mega-head {
-          font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12px;
-          color: ${T.gold}; margin-bottom: 8px; padding-bottom: 8px;
-          border-bottom: 1px solid ${T.ridge}; letter-spacing: .04em; text-transform: uppercase;
+        /* The overshoot in that cubic-bezier is the "pop": the panel scales
+           slightly past 1 before settling. Subtle on purpose — a big bounce
+           reads as a toy, a small one reads as responsive. */
+        .fs-drop--on {
+          opacity: 1; pointer-events: auto;
+          transform: translateY(0) scale(1);
+        }
+        .fs-drop-list {
+          background: ${T.panel}; border: 1px solid ${T.ridge}; border-top: 2px solid ${T.gold};
+          border-radius: 14px; box-shadow: 0 32px 80px -24px rgba(0,0,0,.88);
+          padding: 10px; width: 268px; flex-shrink: 0;
+        }
+        .fs-flyout {
+          background: ${T.panel}; border: 1px solid ${T.ridge}; border-top: 2px solid ${T.gold};
+          border-radius: 14px; box-shadow: 0 32px 80px -24px rgba(0,0,0,.88);
+          padding: 14px 12px 12px; width: 300px; margin-left: 10px; flex-shrink: 0;
+          animation: fs-flyin .28s cubic-bezier(.22,1,.36,1) both;
+        }
+        @keyframes fs-flyin {
+          from { opacity: 0; transform: translateX(-10px) scale(.97); }
+          to   { opacity: 1; transform: none; }
+        }
+        .fs-flyout-head {
+          font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; color: ${T.gold};
+          letter-spacing: .16em; text-transform: uppercase;
+          padding: 0 10px 10px; margin-bottom: 6px; border-bottom: 1px solid ${T.ridge};
+        }
+        .fs-drop-item {
+          display: flex; align-items: center; justify-content: space-between; gap: 10px;
+          width: 100%; text-align: left; background: none; border: none; font: inherit;
+          padding: 10px 12px; border-radius: 8px; cursor: pointer;
+          font-size: 13.5px; line-height: 1.4; color: ${T.inkMid};
+          transition: background .18s, color .18s, padding-left .18s;
+        }
+        .fs-drop-item:hover, .fs-drop-item--on {
+          background: ${T.goldWash}; color: ${T.ink}; padding-left: 16px;
+        }
+        .fs-flyout .fs-drop-item {
+          animation: fs-flyin .3s cubic-bezier(.22,1,.36,1) both;
         }
         .fs-droplink {
           display: block; text-align: left; background: none; border: none; font-family: inherit;
@@ -1198,9 +1397,14 @@ export default function ForeSecure() {
 
           <nav ref={navRef} className="fs-desktop-nav" style={{ display: "flex", alignItems: "center", gap: 28, flex: 1, justifyContent: "center" }}>
             {NAV_MENU.map((item) => (
-              <NavMenuItem key={item.label} item={item} isOpen={openMenu === item.label}
-                onToggle={() => setOpenMenu((m) => (m === item.label ? null : item.label))}
-                onNavigate={handleNavigate} />
+              <NavMenuItem
+                key={item.label}
+                item={item}
+                isOpen={openMenu === item.label}
+                onOpen={() => setOpenMenu(item.label)}
+                onClose={() => setOpenMenu((m) => (m === item.label ? null : m))}
+                onNavigate={handleNavigate}
+              />
             ))}
             <button onClick={() => handleNavigate("Travel Tracker")} className="fs-navlink">Travel Tracker</button>
             <button onClick={() => handleNavigate("Mass Communication")} className="fs-navlink">Mass Communication</button>
@@ -1275,7 +1479,7 @@ export default function ForeSecure() {
       {page === "home" && (
         <>
           {/* ---- HERO: the globe is the thesis ---- */}
-          <section style={{ position: "relative", overflow: "hidden", paddingTop: 40, paddingBottom: 60 }}>
+          <section style={{ position: "relative", overflow: "hidden", paddingTop: 24, paddingBottom: 40 }}>
             <div className="fs-grid-bg" style={{ position: "absolute", inset: 0, maskImage: "radial-gradient(70% 60% at 50% 30%, #000 0%, transparent 100%)", WebkitMaskImage: "radial-gradient(70% 60% at 50% 30%, #000 0%, transparent 100%)" }} />
             <div className="fs-wrap" style={{ position: "relative" }}>
               <div className="fs-hero-grid">
@@ -1294,23 +1498,6 @@ export default function ForeSecure() {
                     ForeSecure watches every site and every itinerary against live global conditions,
                     then alerts only the people actually exposed — with the action you want them to take.
                   </p>
-
-                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 34 }}>
-                    <button className="fs-btn" onClick={handleGoToBriefing}>Request a briefing <ArrowRight size={15} /></button>
-                    <button className="fs-btn-ghost" onClick={() => { setPage("alerts"); setSelectedAlert(null); }}>
-                      <Radio size={15} /> See the live feed
-                    </button>
-                  </div>
-
-                  {/* proof strip — small, factual, not a badge wall */}
-                  <div style={{ display: "flex", gap: 32, flexWrap: "wrap", marginTop: 44, paddingTop: 26, borderTop: `1px solid ${T.ridge}` }}>
-                    {trustedByStats.slice(0, 3).map((s) => (
-                      <div key={s.fig}>
-                        <div className="fs-display" style={{ fontSize: 24, fontWeight: 700, color: T.ink, letterSpacing: "-.02em" }}>{s.fig}</div>
-                        <div style={{ fontSize: 11.5, color: T.inkLow, marginTop: 4, maxWidth: 150, lineHeight: 1.45 }}>{s.label}</div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
                 {/* the globe */}
@@ -1348,13 +1535,13 @@ export default function ForeSecure() {
             <Reveal>
               <Eyebrow>Coverage</Eyebrow>
               <h2 className="fs-display" style={{ fontSize: "clamp(28px,3.6vw,42px)", fontWeight: 700, letterSpacing: "-.028em", marginTop: 16, maxWidth: 640, lineHeight: 1.12 }}>
-                Four threat domains, one chain of command.
+                <RevealWords text="Four threat domains, one chain of command." />
               </h2>
             </Reveal>
 
             <div className="fs-g4" style={{ marginTop: 44 }}>
-              {DOMAINS.map(({ icon: Icon, title, desc, metric, metricLabel }, i) => (
-                <Reveal key={title} delay={i * 80}>
+              {DOMAINS.map(({ icon: Icon, title, desc }, i) => (
+                <Reveal key={title} delay={i * 90} from={i % 2 ? "right" : "left"}>
                   <div className="fs-card fs-card--hover" style={{ padding: 26, height: "100%", display: "flex", flexDirection: "column" }}>
                     <div style={{
                       width: 40, height: 40, borderRadius: 10, background: T.goldWash,
@@ -1364,10 +1551,6 @@ export default function ForeSecure() {
                     </div>
                     <h3 className="fs-display" style={{ fontSize: 17, fontWeight: 600, marginTop: 20, letterSpacing: "-.01em" }}>{title}</h3>
                     <p style={{ fontSize: 13.5, color: T.inkMid, marginTop: 10, lineHeight: 1.6, flex: 1 }}>{desc}</p>
-                    <div style={{ marginTop: 22, paddingTop: 16, borderTop: `1px solid ${T.ridge}` }}>
-                      <div className="fs-display" style={{ fontSize: 20, fontWeight: 700, color: T.gold, letterSpacing: "-.02em" }}>{metric}</div>
-                      <div className="fs-mono" style={{ fontSize: 10, letterSpacing: ".1em", textTransform: "uppercase", color: T.inkLow, marginTop: 4 }}>{metricLabel}</div>
-                    </div>
                   </div>
                 </Reveal>
               ))}
@@ -1379,34 +1562,14 @@ export default function ForeSecure() {
             <Reveal>
               <Eyebrow>Escalation path</Eyebrow>
               <h2 className="fs-display" style={{ fontSize: "clamp(28px,3.6vw,42px)", fontWeight: 700, letterSpacing: "-.028em", marginTop: 16, maxWidth: 700, lineHeight: 1.12 }}>
-                A signal becomes an alert in five steps — and never skips one.
+                <RevealWords text="A signal becomes an alert in five steps — and never skips one." />
               </h2>
               <p style={{ fontSize: 15.5, color: T.inkMid, marginTop: 16, maxWidth: 560, lineHeight: 1.65 }}>
                 The order matters more than the speed. Most false alarms come from dispatching before step two.
               </p>
             </Reveal>
 
-            <div style={{ marginTop: 48, position: "relative" }}>
-              {/* the spine */}
-              <div style={{ position: "absolute", left: 25, top: 12, bottom: 12, width: 1, background: `linear-gradient(180deg, ${T.gold}, ${T.ridge})` }} />
-              {ESCALATION.map((s, i) => (
-                <Reveal key={s.n} delay={i * 70}>
-                  <div style={{ display: "flex", gap: 26, paddingBottom: i === ESCALATION.length - 1 ? 0 : 30, position: "relative" }}>
-                    <div style={{
-                      width: 50, height: 50, borderRadius: "50%", flexShrink: 0, zIndex: 1,
-                      background: T.hull, border: `1px solid ${i === 0 ? T.gold : T.ridgeHi}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}>
-                      <span className="fs-mono" style={{ fontSize: 13, fontWeight: 500, color: i === 0 ? T.gold : T.inkMid }}>{s.n}</span>
-                    </div>
-                    <div style={{ paddingTop: 10, maxWidth: 620 }}>
-                      <h3 className="fs-display" style={{ fontSize: 19, fontWeight: 600, letterSpacing: "-.015em" }}>{s.title}</h3>
-                      <p style={{ fontSize: 14.5, color: T.inkMid, marginTop: 8, lineHeight: 1.65 }}>{s.body}</p>
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
+            <EscalationPath steps={ESCALATION} />
           </section>
 
           {/* ---- PLATFORM SPLIT ---- */}
@@ -1416,7 +1579,7 @@ export default function ForeSecure() {
                 { key: "Travel Tracker", icon: Plane, line: "Itineraries sync at booking. Nobody goes dark between legs." },
                 { key: "Mass Communication", icon: Megaphone, line: "One message, one radius, delivery receipts in real time." },
               ].map(({ key, icon: Icon, line }, i) => (
-                <Reveal key={key} delay={i * 90}>
+                <Reveal key={key} delay={i * 100} from={i === 0 ? "left" : "right"}>
                   <button onClick={() => handleNavigate(key)} className="fs-card fs-card--hover"
                     style={{ display: "block", width: "100%", textAlign: "left", cursor: "pointer", padding: 0, overflow: "hidden", fontFamily: "inherit" }}>
                     <ContourArt seed={i + 2} height={190} accent={i === 0 ? T.gold : T.red} />
@@ -1443,7 +1606,7 @@ export default function ForeSecure() {
                 <div>
                   <Eyebrow tone="red" live>Live feed</Eyebrow>
                   <h2 className="fs-display" style={{ fontSize: "clamp(28px,3.6vw,42px)", fontWeight: 700, letterSpacing: "-.028em", marginTop: 16, lineHeight: 1.12 }}>
-                    What the desk is watching right now.
+                    <RevealWords text="What the desk is watching right now." />
                   </h2>
                 </div>
                 <button className="fs-btn-ghost" onClick={() => { setPage("alerts"); setSelectedAlert(null); }}>
@@ -1454,7 +1617,7 @@ export default function ForeSecure() {
 
             <div className="fs-g3" style={{ marginTop: 36 }}>
               {dedupedAlerts.slice(0, 3).map((item, i) => (
-                <Reveal key={item.url} delay={i * 80}>
+                <Reveal key={item.url} delay={i * 90} from="up">
                   <button onClick={() => { setSelectedAlert(item); setPage("alerts"); window.scrollTo({ top: 0 }); }}
                     className="fs-card fs-card--hover"
                     style={{ display: "block", width: "100%", padding: 24, height: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit" }}>
@@ -1489,40 +1652,9 @@ export default function ForeSecure() {
             </div>
           </section>
 
-          {/* ---- INSIGHTS ---- */}
-          <section className="fs-wrap" style={{ paddingTop: 110 }}>
-            <Reveal>
-              <Eyebrow>Field notes</Eyebrow>
-              <h2 className="fs-display" style={{ fontSize: "clamp(28px,3.6vw,42px)", fontWeight: 700, letterSpacing: "-.028em", marginTop: 16, lineHeight: 1.12 }}>
-                Written by the analysts doing the assessments.
-              </h2>
-            </Reveal>
-            <div style={{ marginTop: 36, borderTop: `1px solid ${T.ridge}` }}>
-              {insightsArticles.map((a, i) => (
-                <Reveal key={a.title} delay={i * 70}>
-                  <button onClick={() => handleNavigate("Blogs")} className="fs-row"
-                    style={{
-                      display: "flex", alignItems: "center", gap: 24, width: "100%", textAlign: "left",
-                      padding: "24px 8px", background: "none", border: "none",
-                      borderBottom: `1px solid ${T.ridge}`, cursor: "pointer", fontFamily: "inherit",
-                      transition: "background .22s, padding-left .22s",
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,.02)"; e.currentTarget.style.paddingLeft = "18px"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.paddingLeft = "8px"; }}
-                  >
-                    <span className="fs-mono" style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: T.gold, width: 78, flexShrink: 0 }}>{a.tag}</span>
-                    <span className="fs-display" style={{ fontSize: 17.5, fontWeight: 500, color: T.ink, flex: 1, letterSpacing: "-.015em", lineHeight: 1.4 }}>{a.title}</span>
-                    <span className="fs-mono" style={{ fontSize: 11, color: T.inkLow, flexShrink: 0 }}>{a.read}</span>
-                    <ArrowUpRight size={17} color={T.inkLow} style={{ flexShrink: 0 }} />
-                  </button>
-                </Reveal>
-              ))}
-            </div>
-          </section>
-
           {/* ---- NEWSLETTER + CTA ---- */}
           <section className="fs-wrap" style={{ paddingTop: 110 }}>
-            <Reveal>
+            <Reveal from="scale">
               <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", border: `1px solid ${T.ridge}`, background: T.hull }}>
                 <div className="fs-grid-bg" style={{ position: "absolute", inset: 0, opacity: .25 }} />
                 <div style={{ position: "relative", padding: "48px 44px", display: "flex", flexWrap: "wrap", gap: 28, alignItems: "center", justifyContent: "space-between" }}>
